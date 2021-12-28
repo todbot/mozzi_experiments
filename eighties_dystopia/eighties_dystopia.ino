@@ -8,7 +8,7 @@
  *  - Wire a 1k resistor from audio out to Tip & Ring1 of a standard 
  *      TRRS 1/8" (3.5mm) headphone plug
  *  - Plug into portable speaker with good bass response
- *  - Become engulfed with dismay in a Cameron-/Carpeter-inspired 1980s distopia
+ *  - Become engulfed with dismay in a Cameron-/Carpeter-inspired 1980s dystopia
  *  
  *  Code:
  *  - Five detuned oscillators are randomly detuned very second or so
