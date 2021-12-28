@@ -10,6 +10,12 @@
  *  - Plug into portable speaker with good bass response
  *  - Become engulfed with dismay in a Cameron-/Carpeter-inspired 1980s distopia
  *  
+ *  Code:
+ *  - Five detuned oscillators are randomly detuned very second or so
+ *  - A low-pass filter is slowly modulated over the filters
+ *  - The filter modulation rate also changes randomly about every second
+ *  - Every 17.5 seconds, a new note is randomly chosen from the allowed note list
+ *  
  * 27 Dec 2021 - @todbot
  * 
  */
