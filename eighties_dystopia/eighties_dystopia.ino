@@ -1,5 +1,5 @@
 /**
- * eighties_distopia.ino -- 
+ * eighties_dystopia.ino --
  *  - A swirling ominous wub that evolves over time
  *  - Tested on QT Py M0 (audio output pin A0) or Trinket M0 (pin 1)
  *  - No user input, just wallow in the sound
