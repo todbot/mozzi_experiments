@@ -31,5 +31,8 @@ in "File" -> "Examples" -> "Mozzi".  Many of the examples will work with Scout b
 
 - Mozzi is very particular about what is in `loop()`. Do not put anything else in there.
   Instead put it in the `void updateControl()` function. See the sketches for examples.
-- Mozzi output is quieter than standard Scout (which outputs full-width square waves).
-  Use an external amp for best results.
+
+
+## Any questions?
+
+Open up an issue on this repo or contact me on [twitter/@todbot](https://twitter.com/todbot)!
