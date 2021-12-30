@@ -43,7 +43,7 @@ uint8_t note_id = 0;
 uint32_t lastMillis = 0;
 
 void setup() {
-  Serial.begin(115200); 
+  Serial.begin(115200);
   startMozzi();
   kFilterMod.setFreq(0.08f);
   lpf.setCutoffFreqAndResonance(20, resonance);
