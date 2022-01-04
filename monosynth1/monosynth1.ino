@@ -7,7 +7,8 @@
  *  @todbot 3 Jan 2021
  **/
 
-#include <MIDI.h>
+#define CONTROL_RATE 512  // Mozzi's controller update rate
+
 #include <MozziGuts.h>
 #include <Oscil.h>
 //#include <tables/triangle_warm8192_int8.h>
@@ -19,8 +20,8 @@
 #include <ADSR.h>
 #include <Portamento.h>
 #include <mozzi_midi.h> // for mtof()
+#include <MIDI.h>
 
-//#include <Keypad.h>
 
 // SETTINGS
 float mod_amount = 0.5;
@@ -29,6 +30,27 @@ uint8_t cutoff = 59;     // range 0-255, corresponds to 0-8192 Hz
 int portamento_time = 50;  // milliseconds
 int env_release_time = 1000; // milliseconds
 
+enum KnownCCs {
+  Modulation=0,
+  Resonance,
+  FilterCutoff,
+  CC_COUNT
+};
+
+uint8_t midi_ccs[] = {
+  1, // modulation
+  71, // resonance
+  74, // filter cutoff
+};
+uint8_t mod_vals[ CC_COUNT ];
+
+
+// This is a piece of "magic" code that allows us to change the default behaviour of the MIDI library
+//struct MySettings : public MIDI_NAMESPACE::DefaultSettings {
+//  static const bool Use1ByteParsing = false; // Allow MIDI.read to handle all received data in one go
+//  static const long BaudRate = 31250;        // Doesn't build without this...
+//};
+//MIDI_CREATE_CUSTOM_INSTANCE(HardwareSerial, Serial1, MIDI, MySettings); // for USB-based SAMD
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 //
@@ -48,13 +70,18 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
 
-  MIDI.setHandleNoteOn(handleNoteOn);
-  MIDI.setHandleNoteOff(handleNoteOff);
+//  MIDI.setHandleNoteOn(handleNoteOn);
+//  MIDI.setHandleNoteOff(handleNoteOff);
+//  MIDI.setHandleControlChange(handleControlChange);
   MIDI.begin(MIDI_CHANNEL_OMNI);   // Initiate MIDI communications, listen to all channels
   
-  startMozzi();
+  startMozzi(CONTROL_RATE);
 
-  lpf.setCutoffFreqAndResonance(cutoff, resonance);
+  mod_vals[Modulation] = 64;  // 0.5
+  mod_vals[Resonance] = 187; 
+  mod_vals[FilterCutoff] = 59;
+
+  lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], resonance);
   kFilterMod.setFreq(4.0f);  // fast
   envelope.setADLevels(255, 255);
   envelope.setTimes(100, 200, 20000, env_release_time);
@@ -67,7 +94,7 @@ void loop() {
 }
 
 void handleNoteOn(byte channel, byte note, byte velocity) {
-  Serial.println("midi_test handleNoteOn!");
+//  Serial.println("midi_test handleNoteOn!");
   digitalWrite(LED_BUILTIN,HIGH);
   portamento.start(note);
 //  aOsc1.setFreq( mtof(note) ); // old way of direct set, now use portamento
@@ -80,12 +107,40 @@ void handleNoteOff(byte channel, byte note, byte velocity) {
   envelope.noteOff();
 }
 
+void handleControlChange(byte channel, byte cc_num, byte cc_val) {
+  for( int i=0; i<CC_COUNT; i++) { 
+    if( midi_ccs[i] == cc_num ) { // we got one
+      mod_vals[i] = cc_val;
+//      Serial.printf("CC %d %d\n", cc_num, cc_val);
+    }
+  }
+}
+
+void handleMIDI() {
+  while( MIDI.read() ) { 
+    switch(MIDI.getType()) {
+      case midi::ControlChange:
+        handleControlChange(0, MIDI.getData1(), MIDI.getData2());
+        break;
+      case midi::NoteOn:
+        handleNoteOn( 0, MIDI.getData1(),MIDI.getData2());
+        break;
+      case midi::NoteOff:
+        handleNoteOff( 0, MIDI.getData1(),MIDI.getData2());
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 void updateControl() {
   scanKeys();
-  MIDI.read();
+  handleMIDI();
+  // MIDI.read();
   // map the lpf modulation into the filter range (0-255), corresponds with 0-8191Hz
-  uint8_t cutoff_freq = cutoff + (mod_amount * (kFilterMod.next()/2));
-  lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
+  //uint8_t cutoff_freq = cutoff + (mod_amount * (kFilterMod.next()/2));
+  lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], resonance);
   envelope.update();
   Q16n16 pf = portamento.next();  // Q16n16 is a fixed-point fraction in 32-bits (16bits . 16bits)
   aOsc1.setFreq_Q16n16(pf);
@@ -100,28 +155,6 @@ AudioOutput_t updateAudio() {
 
 void scanKeys() {
 }
-//  if ( !keys.getKeys() ) { return; }
-//
-//  for (int i = 0; i < LIST_MAX; i++) { // Scan the whole key list.
-//    byte key = keys.key[i].kchar;
-//    byte kstate = keys.key[i].kstate;
-//    if ( kstate == PRESSED || kstate == HOLD ) {
-//      if( millis() < 1000 ) { handleModeChange(key); } // mode selector!
-//      byte note = note_offset + key;
-//      Serial.print((byte)key); Serial.println(" presssed/hold");
-//      digitalWrite(LED_BUILTIN, HIGH);
-//      portamento.start(note);
-//      // aOsc1.setFreq( mtof(note) ); // old way of direct set, now use portamento
-//      // aOsc2.setFreq( (float)(mtof(note) * 1.01) );
-//      envelope.noteOn();
-//    }
-//    else if( kstate == RELEASED ) { 
-//      Serial.print((byte)key); Serial.println(" released");
-//      digitalWrite(LED_BUILTIN, LOW);
-//      envelope.noteOff();
-//    }
-//  }
-//}
 
 // allow some simple parameter changing based on keys
 // pressed on startup
