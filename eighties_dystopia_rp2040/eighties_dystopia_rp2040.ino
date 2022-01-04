@@ -55,7 +55,10 @@ uint32_t lastMillis = 0;
 
 void setup() {
   // RP2040 defaults to GP0, from https://github.com/pschatzmann/Mozzi/
-  //Mozzi.setPin(0,2); // this sets RP2040 GP2
+  // Mozzi.setPin(0,2); // this sets RP2040 GP2
+//  Mozzi.setPin(0,16); // this sets RP2040 GP16  // MacroPad
+//  pinMode(14,OUTPUT);
+//  digitalWrite(14, HIGH);
   Serial.begin(115200);
   delay(3000);
   Serial.print("seed:"); Serial.println(random(100));
@@ -105,10 +108,10 @@ void updateControl() {
 
 // mozzi function, called every AUDIO_RATE to output sample
 AudioOutput_t updateAudio() {
-  long asig = (long) 0;
+  int16_t asig = (long) 0;
   for( int i=0; i<NUM_VOICES; i++) {
     asig += aOscs[i].next();
   }
   asig = lpf.next(asig);
-  return MonoOutput::fromAlmostNBit(11, asig);
+  return MonoOutput::fromAlmostNBit(11, int16_t);
 }
