@@ -82,6 +82,7 @@ void handleNoteOff(byte channel, byte note, byte velocity) {
 
 void updateControl() {
   scanKeys();
+  MIDI.read();
   // map the lpf modulation into the filter range (0-255), corresponds with 0-8191Hz
   uint8_t cutoff_freq = cutoff + (mod_amount * (kFilterMod.next()/2));
   lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
@@ -94,11 +95,11 @@ void updateControl() {
 
 AudioOutput_t updateAudio() {
   long asig = lpf.next( aOsc1.next() + aOsc2.next() );
-  return MonoOutput::fromNBit(17, envelope.next() * asig); // 16 = 8 signal bits + 8 envelope bits
+  return MonoOutput::fromAlmostNBit(18, envelope.next() * asig); // 16 = 8 signal bits + 8 envelope bits
 }
 
 void scanKeys() {
-  MIDI.read();
+}
 //  if ( !keys.getKeys() ) { return; }
 //
 //  for (int i = 0; i < LIST_MAX; i++) { // Scan the whole key list.
@@ -120,7 +121,7 @@ void scanKeys() {
 //      envelope.noteOff();
 //    }
 //  }
-}
+//}
 
 // allow some simple parameter changing based on keys
 // pressed on startup
