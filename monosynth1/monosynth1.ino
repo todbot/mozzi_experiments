@@ -7,7 +7,10 @@
  *  @todbot 3 Jan 2021
  **/
 
-#define CONTROL_RATE 1024  // Mozzi's controller update rate
+// Mozzi's controller update rate, seems to have issues at 1024
+// If slower than 512 can't get all MIDI from Live
+#define CONTROL_RATE 512 
+// set DEBUG_MIDI 1 to show CCs received in Serial Monitor
 #define DEBUG_MIDI 0
 
 #include <MozziGuts.h>
@@ -24,8 +27,8 @@
 
 
 // SETTINGS
-int portamento_time = 50;  // milliseconds
-int env_release_time = 1000; // milliseconds
+//int portamento_time = 50;  // milliseconds
+//int env_release_time = 1000; // milliseconds
 byte sound_mode = 0; // patch number / program change
 bool retrig_lfo = true;
 
@@ -34,14 +37,17 @@ enum KnownCCs {
   Resonance,
   FilterCutoff,
   PortamentoTime,
+  EnvReleaseTime,
   CC_COUNT
 };
 
+// mapping of KnownCCs to MIDI CC numbers (this is somewhat standardized)
 uint8_t midi_ccs[] = {
-  1, // modulation
-  71, // resonance
-  74, // filter cutoff
-  5, // portamento time
+  1,   // modulation
+  71,  // resonance
+  74,  // filter cutoff
+  5,   // portamento time
+  72,  // env release time
 };
 uint8_t mod_vals[ CC_COUNT ];
 
@@ -120,37 +126,34 @@ void handleProgramChange(byte m) {
     mod_vals[Resonance] = 93;
     mod_vals[FilterCutoff] = 60;
     mod_vals[PortamentoTime] = 50; // actually in milliseconds
+    mod_vals[EnvReleaseTime] = 100; // in 10x milliseconds (100 = 1000 msecs)
 
     lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], mod_vals[Resonance]*2);
     
     kFilterMod.setFreq(4.0f);  // fast
     envelope.setADLevels(255, 255);
-    envelope.setTimes(50, 200, 20000, env_release_time);
-    portamento.setTime( portamento_time );
+    envelope.setTimes(50, 200, 20000, mod_vals[EnvReleaseTime]*10 );
+    portamento.setTime( mod_vals[PortamentoTime] );
   }
   else if ( sound_mode == 1 ) {
+    aOsc1.setTable(SQUARE_ANALOGUE512_DATA);
+    aOsc2.setTable(SQUARE_ANALOGUE512_DATA);
+    
+    mod_vals[Resonance] = 69;
+    
+    lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], mod_vals[Resonance]*2);
+    
     kFilterMod.setFreq(0.5f);     // slow
+    envelope.setADLevels(255, 255);
+    envelope.setTimes(100, 200, 20000, mod_vals[EnvReleaseTime]*10 );
+    portamento.setTime( mod_vals[PortamentoTime] );
   }
   else if ( sound_mode == 2 ) {
-    kFilterMod.setFreq(0.25f);    // slower
-    retrig_lfo = false;
-  }
-  else if ( sound_mode == 3 ) {
-    kFilterMod.setFreq(0.05f);      // offish, almost no mod
-    mod_vals[FilterCutoff] = 78;
-  }
-  else if ( sound_mode == 6 ) {
     aOsc1.setTable(TRIANGLE_ANALOGUE512_DATA);
     aOsc2.setTable(TRIANGLE_ANALOGUE512_DATA);
     mod_vals[FilterCutoff] = 65;
-  }
-  else if ( sound_mode == 7 ) {
-    aOsc1.setTable(SQUARE_ANALOGUE512_DATA);
-    aOsc2.setTable(SQUARE_ANALOGUE512_DATA);
-   //envelope.setADLevels(230, 230); // square's a bit too loud so it clips
-    mod_vals[Resonance] = 130;
-  }
-  else { // sound_mode == 0
+    //kFilterMod.setFreq(0.25f);    // slower
+    //retrig_lfo = false;
   }
 }
 
