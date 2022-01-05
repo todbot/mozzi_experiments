@@ -7,11 +7,11 @@
  *  @todbot 3 Jan 2021
  **/
 
-#define CONTROL_RATE 512  // Mozzi's controller update rate
+#define CONTROL_RATE 1024  // Mozzi's controller update rate
+#define DEBUG_MIDI 0
 
 #include <MozziGuts.h>
 #include <Oscil.h>
-//#include <tables/triangle_warm8192_int8.h>
 #include <tables/triangle_analogue512_int8.h>
 #include <tables/square_analogue512_int8.h>
 #include <tables/saw_analogue512_int8.h>
@@ -24,16 +24,16 @@
 
 
 // SETTINGS
-float mod_amount = 0.5;
-uint8_t resonance = 187; // range 0-255, 255 is most resonant
-uint8_t cutoff = 59;     // range 0-255, corresponds to 0-8192 Hz
 int portamento_time = 50;  // milliseconds
 int env_release_time = 1000; // milliseconds
+byte sound_mode = 0; // patch number / program change
+bool retrig_lfo = true;
 
 enum KnownCCs {
   Modulation=0,
   Resonance,
   FilterCutoff,
+  PortamentoTime,
   CC_COUNT
 };
 
@@ -41,11 +41,10 @@ uint8_t midi_ccs[] = {
   1, // modulation
   71, // resonance
   74, // filter cutoff
+  5, // portamento time
 };
 uint8_t mod_vals[ CC_COUNT ];
 
-
-// This is a piece of "magic" code that allows us to change the default behaviour of the MIDI library
 //struct MySettings : public MIDI_NAMESPACE::DefaultSettings {
 //  static const bool Use1ByteParsing = false; // Allow MIDI.read to handle all received data in one go
 //  static const long BaudRate = 31250;        // Doesn't build without this...
@@ -63,62 +62,105 @@ ADSR <CONTROL_RATE, AUDIO_RATE> envelope;
 Portamento <CONTROL_RATE> portamento;
 LowPassFilter lpf;
 
-byte startup_mode = 0;
-bool retrig_lfo = true;
-
+//
 void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
 
-//  MIDI.setHandleNoteOn(handleNoteOn);
-//  MIDI.setHandleNoteOff(handleNoteOff);
-//  MIDI.setHandleControlChange(handleControlChange);
   MIDI.begin(MIDI_CHANNEL_OMNI);   // Initiate MIDI communications, listen to all channels
   
   startMozzi(CONTROL_RATE);
 
-  mod_vals[Modulation] = 64;  // 0.5
-  mod_vals[Resonance] = 187; 
-  mod_vals[FilterCutoff] = 59;
-
-  lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], resonance);
-  kFilterMod.setFreq(4.0f);  // fast
-  envelope.setADLevels(255, 255);
-  envelope.setTimes(100, 200, 20000, env_release_time);
-  portamento.setTime( portamento_time );
-
+  handleProgramChange(0); // set our initial patch
 }
 
+//
 void loop() {
   audioHook();
 }
 
+//
 void handleNoteOn(byte channel, byte note, byte velocity) {
 //  Serial.println("midi_test handleNoteOn!");
   digitalWrite(LED_BUILTIN,HIGH);
   portamento.start(note);
-//  aOsc1.setFreq( mtof(note) ); // old way of direct set, now use portamento
-//  aOsc2.setFreq( (float)(mtof(note) * 1.01) );
   envelope.noteOn();
 }
 
+//
 void handleNoteOff(byte channel, byte note, byte velocity) {
   digitalWrite(LED_BUILTIN,LOW);
   envelope.noteOff();
 }
 
+//
 void handleControlChange(byte channel, byte cc_num, byte cc_val) {
+  #if DEBUG_MIDI 
+  Serial.printf("CC %d %d\n", cc_num, cc_val);
+  #endif
   for( int i=0; i<CC_COUNT; i++) { 
     if( midi_ccs[i] == cc_num ) { // we got one
       mod_vals[i] = cc_val;
-//      Serial.printf("CC %d %d\n", cc_num, cc_val);
+      if( i == PortamentoTime ) { // special case, not set every updateControl()
+        portamento.setTime( mod_vals[PortamentoTime] * 2);
+      }
     }
   }
 }
 
+//
+void handleProgramChange(byte m) {
+  Serial.print("program change:"); Serial.println((byte)m);
+  sound_mode = m;
+  if( sound_mode == 0 ) {    
+    aOsc1.setTable(SAW_ANALOGUE512_DATA);
+    aOsc2.setTable(SAW_ANALOGUE512_DATA);
+    
+    mod_vals[Modulation] = 0;   // FIXME: modulation unused currently
+    mod_vals[Resonance] = 93;
+    mod_vals[FilterCutoff] = 60;
+    mod_vals[PortamentoTime] = 50; // actually in milliseconds
+
+    lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], mod_vals[Resonance]*2);
+    
+    kFilterMod.setFreq(4.0f);  // fast
+    envelope.setADLevels(255, 255);
+    envelope.setTimes(50, 200, 20000, env_release_time);
+    portamento.setTime( portamento_time );
+  }
+  else if ( sound_mode == 1 ) {
+    kFilterMod.setFreq(0.5f);     // slow
+  }
+  else if ( sound_mode == 2 ) {
+    kFilterMod.setFreq(0.25f);    // slower
+    retrig_lfo = false;
+  }
+  else if ( sound_mode == 3 ) {
+    kFilterMod.setFreq(0.05f);      // offish, almost no mod
+    mod_vals[FilterCutoff] = 78;
+  }
+  else if ( sound_mode == 6 ) {
+    aOsc1.setTable(TRIANGLE_ANALOGUE512_DATA);
+    aOsc2.setTable(TRIANGLE_ANALOGUE512_DATA);
+    mod_vals[FilterCutoff] = 65;
+  }
+  else if ( sound_mode == 7 ) {
+    aOsc1.setTable(SQUARE_ANALOGUE512_DATA);
+    aOsc2.setTable(SQUARE_ANALOGUE512_DATA);
+   //envelope.setADLevels(230, 230); // square's a bit too loud so it clips
+    mod_vals[Resonance] = 130;
+  }
+  else { // sound_mode == 0
+  }
+}
+
+//
 void handleMIDI() {
-  while( MIDI.read() ) { 
+  while( MIDI.read() ) {  // use while() to read all pending MIDI, shouldn't hang
     switch(MIDI.getType()) {
+      case midi::ProgramChange:
+        handleProgramChange(MIDI.getData1());
+        break;
       case midi::ControlChange:
         handleControlChange(0, MIDI.getData1(), MIDI.getData2());
         break;
@@ -134,56 +176,29 @@ void handleMIDI() {
   }
 }
 
+// mozzi function, called at CONTROL_RATE times per second
 void updateControl() {
-  scanKeys();
   handleMIDI();
-  // MIDI.read();
-  // map the lpf modulation into the filter range (0-255), corresponds with 0-8191Hz
+  
+  // map the lpf modulation into the filter range (0-255), corresponds with 0-8191Hz, kFilterMod runs -128-127
   //uint8_t cutoff_freq = cutoff + (mod_amount * (kFilterMod.next()/2));
-  lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], resonance);
+//  uint16_t fm = ((kFilterMod.next() * mod_vals[Modulation]) / 128) + 127 ; 
+//  uint8_t cutoff_freq = constrain(mod_vals[FilterCutoff] + fm, 0,255 );
+  
+//  lpf.setCutoffFreqAndResonance(cutoff_freq, mod_vals[Resonance]*2);
+
+  lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], mod_vals[Resonance]*2);  // don't *2 filter since we want 0-4096Hz
+
   envelope.update();
+  
   Q16n16 pf = portamento.next();  // Q16n16 is a fixed-point fraction in 32-bits (16bits . 16bits)
   aOsc1.setFreq_Q16n16(pf);
-  aOsc2.setFreq_Q16n16(pf*1.02); // hmm, feels like this shouldn't work
+  aOsc2.setFreq_Q16n16(pf*1.02);
 
 }
 
+// mozzi function, called at AUDIO_RATE times per second
 AudioOutput_t updateAudio() {
   long asig = lpf.next( aOsc1.next() + aOsc2.next() );
   return MonoOutput::fromAlmostNBit(18, envelope.next() * asig); // 16 = 8 signal bits + 8 envelope bits
-}
-
-void scanKeys() {
-}
-
-// allow some simple parameter changing based on keys
-// pressed on startup
-void handleModeChange(byte m) {
-  startup_mode = m;
-  Serial.print("mode change:"); Serial.println((byte)m);
-  if ( startup_mode == 1 ) {      // lowest C held
-    kFilterMod.setFreq(0.5f);     // slow
-  }
-  else if ( startup_mode == 2 ) { // lowest C# held
-    kFilterMod.setFreq(0.25f);    // slower
-    retrig_lfo = false;
-  }
-  else if ( startup_mode == 3 ) {  // lowest D held
-    kFilterMod.setFreq(0.05f);      // offish, almost no mod
-    cutoff = 78;
-  }
-  else if ( startup_mode == 6 ) {
-    aOsc1.setTable(TRIANGLE_ANALOGUE512_DATA);
-    aOsc2.setTable(TRIANGLE_ANALOGUE512_DATA);
-    cutoff = 65;
-  }
-  else if ( startup_mode == 7 ) {
-    aOsc1.setTable(SQUARE_ANALOGUE512_DATA);
-    aOsc2.setTable(SQUARE_ANALOGUE512_DATA);
-   //envelope.setADLevels(230, 230); // square's a bit too loud so it clips
-   resonance = 130;
-  }
-  else {                          // no keys held
-    kFilterMod.setFreq(4.0f);     // fast
-  }
 }
