@@ -107,8 +107,12 @@ void handleControlChange(byte channel, byte cc_num, byte cc_val) {
   for( int i=0; i<CC_COUNT; i++) { 
     if( midi_ccs[i] == cc_num ) { // we got one
       mod_vals[i] = cc_val;
-      if( i == PortamentoTime ) { // special case, not set every updateControl()
+      // special cases, not set every updateControl()
+      if( i == PortamentoTime ) { 
         portamento.setTime( mod_vals[PortamentoTime] * 2);
+      }
+      else if( i == EnvReleaseTime ) {
+         envelope.setReleaseTime( mod_vals[EnvReleaseTime]*10 );
       }
     }
   }
@@ -139,13 +143,14 @@ void handleProgramChange(byte m) {
     aOsc1.setTable(SQUARE_ANALOGUE512_DATA);
     aOsc2.setTable(SQUARE_ANALOGUE512_DATA);
     
-    mod_vals[Resonance] = 69;
+    mod_vals[Resonance] = 50;
+    mod_vals[EnvReleaseTime] = 15;
     
     lpf.setCutoffFreqAndResonance(mod_vals[FilterCutoff], mod_vals[Resonance]*2);
     
     kFilterMod.setFreq(0.5f);     // slow
     envelope.setADLevels(255, 255);
-    envelope.setTimes(100, 200, 20000, mod_vals[EnvReleaseTime]*10 );
+    envelope.setTimes(50, 100, 20000, (uint16_t)mod_vals[EnvReleaseTime]*10 );
     portamento.setTime( mod_vals[PortamentoTime] );
   }
   else if ( sound_mode == 2 ) {
