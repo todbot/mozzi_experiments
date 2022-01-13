@@ -28,6 +28,7 @@
 #include <tables/saw_analogue512_int8.h> // oscillator waveform
 #include <tables/square_analogue512_int8.h> // oscillator waveform
 #include <tables/triangle_analogue512_int8.h> // oscillator waveform
+#include <tables/sin512_int8.h> // oscillator waveform
 #include <tables/cos2048_int8.h> // filter modulation waveform
 #include <LowPassFilter.h>
 #include <ADSR.h>
@@ -74,7 +75,7 @@ uint8_t root_note = 40;
 uint16_t per_beat_millis = 1000 * 60 / bpm;
 
 uint8_t note_played = 0;  // the note we have played, so we can unplay it later
-uint16_t note_duration = 0.5 * per_beat_millis;
+uint16_t note_duration = 0.75 * per_beat_millis; // 75% gate
 
 uint32_t last_beat_millis = 0;
 
@@ -118,8 +119,9 @@ void updateControl() {
 
   bpm = map( knobB, 0,1023, 100, 1600 );
   per_beat_millis =   1000 * 60 / bpm;
+  note_duration = 0.5 * per_beat_millis;
   
-  uint8_t root_note_maybe = map( knobA, 0,1023, 24, 72);
+  uint8_t root_note_maybe = map( knobA, 0,1023, 24, 84);
   
   if( butA.fell() ) { // pressed
     Serial.println("next arp");
@@ -135,7 +137,7 @@ void updateControl() {
   lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
   envelope.update();
   
-  Serial.printf("knob A:%d b:%d : \t %d %d\n", knobA,knobB, bpm, per_beat_millis);
+  // Serial.printf("knob A:%d b:%d : \t %d %d\n", knobA,knobB, bpm, per_beat_millis);
   if( millis() - last_beat_millis > per_beat_millis )  {
     last_beat_millis = millis();
     arp_pos = (arp_pos+1) % arp_len;
@@ -144,26 +146,32 @@ void updateControl() {
       root_note = root_note_maybe;
     }
     note_played = root_note + arps[arp_id][arp_pos];
+    // note_off_millis = millis() + note_duration;
     noteOn( note_played );
   }
+  
   if( millis() - last_beat_millis > note_duration ) { 
-    noteOff( note_played );
+    if( note_played !=0 ) { 
+      noteOff( note_played );
+      note_played = 0;
+    }
   }
 
 }
 
 void noteOn(uint8_t note) {
-  Serial.print("noteOn:"); Serial.println((byte)note);
+  Serial.print(" noteON:"); Serial.println((byte)note);
   float f = mtof(note);
   for(int i=1;i<NUM_VOICES-1;i++) {
     aOscs[i].setFreq( f + (float)rand(150)/100); // detune slightly
-    aOscs[i].setPhase(rand(100)); // helps with clipping on summing if they're not all in phase
+    //aOscs[i].setPhase(rand(100)); // helps with clipping on summing if they're not all in phase
   }
   envelope.noteOn();
   MIDIusb.sendNoteOn(note, 127, 1); // velocity 127 on chan 1
 }
 
 void noteOff(uint8_t note) {
+  Serial.print("noteOFF:"); Serial.println((byte)note);
   envelope.noteOff();
   MIDIusb.sendNoteOn(note, 0, 1); // velocity 0 on chan 1
 }
@@ -175,7 +183,7 @@ void readMIDI() {
     byte data2 = MIDIusb.getData2();
     byte chan  = MIDIusb.getChannel();
     if( mtype == midi::NoteOn ) {  
-      Serial.printf("c:%d t:%2x data:%2x %2x\n", chan, mtype, data1,data2);
+      Serial.printf("MIDIusb: c:%d t:%2x data:%2x %2x\n", chan, mtype, data1,data2);
       // we're not using MIDI in yet
     }
   }
@@ -187,16 +195,20 @@ void setPatch(uint8_t patchnum) {
     }
     kFilterMod.setFreq(0.08f);
     envelope.setADLevels(255, 10);
-    envelope.setTimes(20, 200, 200, 200 );
+    envelope.setTimes(20, 500, 500, 200 );
+    cutoff_freq = 80;
+    resonance = 200;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
   }
   else if( patchnum == 1 ) { 
     for( int i=0; i<NUM_VOICES; i++) { 
-     aOscs[i].setTable(TRIANGLE_ANALOGUE512_DATA);
+     aOscs[i].setTable(SQUARE_ANALOGUE512_DATA);
     }
     kFilterMod.setFreq(0.08f);
     envelope.setADLevels(255, 10);
-    envelope.setTimes(350, 300, 300, 300);
+    envelope.setTimes(350, 500, 500, 500);
+    cutoff_freq = 180;
+    resonance = 100;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
   }
 }
