@@ -43,8 +43,9 @@
 const int dacPin  =  0;  // A0 // audio out assumed by Mozzi
 const int knobAPin = 1;  // A1
 const int knobBPin = 2;  // A2
-const int butBPin = 6;   // D6 "TX"
-const int butAPin = 7;   // D7 "RX"
+const int butBPin  = 6;  // D6 "TX"
+const int butAPin  = 7;  // D7 "RX"
+const int butCPin  = 8;  // D8 "SCK"
 
 Adafruit_USBD_MIDI usb_midi;
 MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, MIDIusb); // USB MIDI
@@ -61,13 +62,15 @@ uint8_t cutoff_freq = 180;
 uint8_t resonance = 100; // range 0-255, 255 is most resonant
 
 int bpm = 130;
-
+uint8_t arp_octaves = 1;
+uint8_t root_note;
 uint8_t patch_num = 0;
 
 Arpy arp = Arpy();
 
 Bounce butA = Bounce();
 Bounce butB = Bounce();
+Bounce butC = Bounce();
 
 void setup() { 
   MIDIusb.begin(MIDI_CHANNEL_OMNI);
@@ -75,20 +78,23 @@ void setup() {
 //  while(!Serial) delay(1);
   MIDIusb.turnThruOff();    // turn off echo
 
+  pinMode( LED_BUILTIN, OUTPUT);
   pinMode( knobAPin, INPUT);
   pinMode( knobBPin, INPUT);
   butA.attach( butAPin, INPUT_PULLUP);
   butB.attach( butBPin, INPUT_PULLUP);
+  butC.attach( butCPin, INPUT_PULLUP);
 
   arp.setNoteOnHandler(noteOn);
   arp.setNoteOffHandler(noteOff);
   arp.setRootNote( 60 );
-  
+  arp.setBPM( 100 );
+  arp.setGateTime( 0.75 ); // percentage of bpm
+  arp.on();
+
   setPatch(0);
   startMozzi();
 
-  Serial.println("turning arp on...");
-  arp.on();
 }
 
 void loop() {
@@ -101,38 +107,43 @@ void updateControl() {
   
   butA.update();
   butB.update();
+  butC.update();
   int knobA = analogRead(knobAPin);
   int knobB = analogRead(knobBPin);
 
-  uint8_t root_note_maybe = map( knobA, 0,1023, 24, 84);
+  root_note = map( knobA, 0,1023, 24, 84);
   float bpm = map( knobB, 0,1023, 100, 5000 );
+  arp.setRootNote( root_note );
   arp.setBPM( bpm );
 
-  if( butA.fell() ) { // pressed
-    Serial.println("next arp");
-    arp.nextArp();
+  if( butA.fell() ) {
+    arp.nextArpId();
+    Serial.printf("--- picking next arp: %d\n", arp.getArpId());
   }
   
   if( butB.fell() ) {
-    uint8_t r = rand(3)+1;
-    arp.setTransposeSteps( r );
-    Serial.print("----- next patch "); Serial.println(r);
-    patch_num = (patch_num+1) % 2;
-    setPatch(patch_num);
+    arp_octaves = arp_octaves + 1; if( arp_octaves==4) { arp_octaves=1; }
+    arp.setTransposeSteps( arp_octaves );
+    Serial.printf("--- arp steps: %d\n",arp_octaves);
   }
   
+  if( butC.fell() ) {
+    patch_num = (patch_num+1) % 2;
+    setPatch(patch_num);
+    Serial.printf("---- next patch: %d\n", patch_num);
+  }
+
   envelope.update();
   
-  arp.update( millis(), root_note_maybe );
+  arp.update();
 }
 
 void noteOn(uint8_t note) {
   Serial.print(" noteON:"); Serial.println((byte)note);
+  digitalWrite(LED_BUILTIN, HIGH);
   float f = mtof(note);
   for(int i=1;i<NUM_VOICES-1;i++) {
-//    aOscs[i].setFreq( f + (float)rand(100)/100); // detune slightly
     aOscs[i].setFreq( f * (float)(i*0.01 + 1)); // detune slightly
-    //aOscs[i].setPhase(rand(100)); // helps with clipping on summing if they're not all in phase?
   }
   envelope.noteOn();
   MIDIusb.sendNoteOn(note, 127, 1); // velocity 127 on chan 1
@@ -140,6 +151,7 @@ void noteOn(uint8_t note) {
 
 void noteOff(uint8_t note) {
   Serial.print("noteOFF:"); Serial.println((byte)note);
+  digitalWrite(LED_BUILTIN, LOW);
   envelope.noteOff();
   MIDIusb.sendNoteOn(note, 0, 1); // velocity 0 on chan 1
 }
