@@ -55,7 +55,7 @@ Oscil<SAW_ANALOGUE512_NUM_CELLS, AUDIO_RATE> aOscs [NUM_VOICES];
 Oscil<COS2048_NUM_CELLS, CONTROL_RATE> kFilterMod(COS2048_DATA);
 ADSR <CONTROL_RATE, AUDIO_RATE> envelope;
 LowPassFilter lpf;
-StateVariable <BANDPASS> svf; // can be LOWPASS, BANDPASS, HIGHPASS or NOTCH
+//StateVariable <BANDPASS> svf; // can be LOWPASS, BANDPASS, HIGHPASS or NOTCH
 
 uint8_t cutoff_freq = 180;
 uint8_t resonance = 100; // range 0-255, 255 is most resonant
@@ -105,7 +105,6 @@ void updateControl() {
   int knobB = analogRead(knobBPin);
 
   uint8_t root_note_maybe = map( knobA, 0,1023, 24, 84);
-  
   float bpm = map( knobB, 0,1023, 100, 5000 );
   arp.setBPM( bpm );
 
@@ -131,8 +130,9 @@ void noteOn(uint8_t note) {
   Serial.print(" noteON:"); Serial.println((byte)note);
   float f = mtof(note);
   for(int i=1;i<NUM_VOICES-1;i++) {
-    aOscs[i].setFreq( f + (float)rand(100)/100); // detune slightly
-    //aOscs[i].setPhase(rand(100)); // helps with clipping on summing if they're not all in phase
+//    aOscs[i].setFreq( f + (float)rand(100)/100); // detune slightly
+    aOscs[i].setFreq( f * (float)(i*0.01 + 1)); // detune slightly
+    //aOscs[i].setPhase(rand(100)); // helps with clipping on summing if they're not all in phase?
   }
   envelope.noteOn();
   MIDIusb.sendNoteOn(note, 127, 1); // velocity 127 on chan 1
@@ -146,7 +146,7 @@ void noteOff(uint8_t note) {
 
 
 void readMIDI() {
-//  if (MIDIusb.read()) {
+  if (MIDIusb.read()) {
 //    byte mtype = MIDIusb.getType();
 //    byte data1 = MIDIusb.getData1();
 //    byte data2 = MIDIusb.getData2();
@@ -155,7 +155,7 @@ void readMIDI() {
 //      Serial.printf("MIDIusb: c:%d t:%2x data:%2x %2x\n", chan, mtype, data1,data2);
 //      // we're not using MIDI in yet
 //    }
-//  }
+  }
 }
 
 void setPatch(uint8_t patchnum) {
@@ -169,8 +169,8 @@ void setPatch(uint8_t patchnum) {
     cutoff_freq = 80;
     resonance = 200;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
-    svf.setCentreFreq(cutoff_freq * 16);
-    svf.setResonance(resonance);
+//    svf.setCentreFreq(cutoff_freq * 16);
+//    svf.setResonance(resonance);
   }
   else if( patchnum == 1 ) { 
     for( int i=0; i<NUM_VOICES; i++) { 
@@ -178,12 +178,12 @@ void setPatch(uint8_t patchnum) {
     }
     kFilterMod.setFreq(0.08f);
     envelope.setADLevels(255, 10);
-    envelope.setTimes(350, 500, 500, 500);
+    envelope.setTimes(350, 200, 200, 200);
     cutoff_freq = 127;
     resonance = 220;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
-    svf.setCentreFreq(cutoff_freq * 16);
-    svf.setResonance(resonance);
+//    svf.setCentreFreq(cutoff_freq * 16);
+//    svf.setResonance(resonance);
   }
 }
 
@@ -193,8 +193,8 @@ AudioOutput_t updateAudio() {
   for( int i=0; i<NUM_VOICES; i++) {
     asig += aOscs[i].next();
   }
-//  asig = lpf.next(asig);
-  asig = svf.next(asig);
-  return MonoOutput::fromNBit(19, envelope.next() * asig);         
-//  return MonoOutput::fromAlmostNBit(12, asig);
+  asig = lpf.next(asig);
+  return MonoOutput::fromNBit(18, envelope.next() * asig);
+//  asig = svf.next(asig);
+//  return MonoOutput::fromNBit(17, envelope.next() * asig);
 }
