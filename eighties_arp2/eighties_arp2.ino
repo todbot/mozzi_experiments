@@ -111,7 +111,7 @@ void updateControl() {
   int knobA = analogRead(knobAPin);
   int knobB = analogRead(knobBPin);
 
-  root_note = map( knobA, 0,1023, 24, 84);
+  root_note = map( knobA, 0,1023, 24, 72);
   float bpm = map( knobB, 0,1023, 100, 5000 );
   arp.setRootNote( root_note );
   arp.setBPM( bpm );
@@ -177,7 +177,7 @@ void setPatch(uint8_t patchnum) {
     }
     kFilterMod.setFreq(0.08f);
     envelope.setADLevels(255, 10);
-    envelope.setTimes(20, 500, 500, 200 );
+    envelope.setTimes(15, 200, 200, 200 );
     cutoff_freq = 80;
     resonance = 200;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
