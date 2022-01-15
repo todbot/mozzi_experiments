@@ -20,9 +20,9 @@ Experiments with Mozzi, mostly on SAMD21 chips
 
 * "eighties_arp" - click for youtube video
 
-  [![youtube link](eighties_arp/eighties_arp_screenshot.jpg) ](https://www.youtube.com/watch?v=Ql72YoCJ8-8)
+  [![youtube link](eighties_arp/eighties_arp_youtube.jpg) ](https://www.youtube.com/watch?v=Ql72YoCJ8-8)
 
-  <a href="eighties_arp/eighties_arp_wiring.jpg"><img src="eighties_arp/eighties_arp_wiring.jpg" alt="wiring" width="400"/></a>
+  <a href="eighties_arp/eighties_arp_wiring.jpg"><img src="eighties_arp/eighties_arp_wiring.jpg" alt="wiring" width="700"/></a>
 
 
 
