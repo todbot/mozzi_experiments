@@ -6,12 +6,21 @@ Experiments with Mozzi, mostly on SAMD21 chips
 
 * [eighties_dystopia](eighties_dystopia/eighties_dystopia.ino) - A swirling ominous wub that evolves over time
 
+* [eighties_dystopia_rp2040](eighties_dystopia_rp2040/eighties_dystopia_rp2040.ino) - Same thing, but on a Raspberry Pi Pico
+
+* [eighties_arp](eighties_arp/eighties_arp.ino) - An arpeggio explorer for non-musicians and test bed for my "Arpy" arpeggio library
+
 ## Demos
 
 * "eighties_dystopia" - See [this Twitter thread](https://twitter.com/todbot/status/1475970495400923137) or
   [this blog post on Adafruit](https://blog.adafruit.com/2021/12/29/make-your-own-80s-dystopian-music-soundtrack-qtpy-arduino-todbot/) 
   or this video below
   <video width="320" controls src="https://user-images.githubusercontent.com/274093/147687238-b004583b-c28a-47b1-984b-539541b77f9c.mp4"></video>
+
+
+* "eighties_arp" -
+
+  * https://www.youtube.com/watch?v=Ql72YoCJ8-8
 
 
 ## How to install Mozzi
