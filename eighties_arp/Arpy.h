@@ -13,7 +13,10 @@ class Arpy
   }
 
   void on() { enabled = true; }
-  void off() { enabled = false; }
+  void off() {
+      enabled = false;
+      if( noteOffHandler) { noteOffHandler( note_played ); }
+  }
 
   // pick which arpeggio to play
   void setArpId(uint8_t arp_id) { arp_id = arp_id % arp_count; }
