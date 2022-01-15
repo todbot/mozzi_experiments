@@ -18,9 +18,12 @@ Experiments with Mozzi, mostly on SAMD21 chips
   <video width="320" controls src="https://user-images.githubusercontent.com/274093/147687238-b004583b-c28a-47b1-984b-539541b77f9c.mp4"></video>
 
 
-* "eighties_arp" -
+* "eighties_arp" - click for youtube video
 
-  * https://www.youtube.com/watch?v=Ql72YoCJ8-8
+  [![youtube link](eighties_arp/eighties_arp_screenshot.jpg) ](https://www.youtube.com/watch?v=Ql72YoCJ8-8)
+
+  <a href="eighties_arp/eighties_arp_wiring.jpg"><img src="eighties_arp/eighties_arp_wiring.jpg" alt="wiring" width="400"/></a>
+
 
 
 ## How to install Mozzi
