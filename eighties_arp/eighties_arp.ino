@@ -6,8 +6,8 @@
  *  - for demo see: https://www.youtube.com/watch?v=Ql72YoCJ8-8
  *  
  *  Circuit:
- *  - QT Py M0 or similar SAMD21-based board
  *  - See included "eighties_arp_wiring.jpg"
+ *  - QT Py M0 or similar SAMD21-based board
  *  - Wire a 1k resistor from audio out to Tip & Ring1 of a 
  *     standard TRRS 1/8" (3.5mm) headphone plug
  *  - For better quality, add a 500  1uF cap from 
