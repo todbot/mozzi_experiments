@@ -1,5 +1,5 @@
 /**
- * eighties_arp1.ino --
+ * eighties_arp0.ino -- testing arps, see "eighties_arp" for more thought-out example
  *  - arp arp arp
  *  - two pots, two buttons, not keys!
  *  
