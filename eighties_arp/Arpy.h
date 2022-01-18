@@ -12,11 +12,14 @@ class Arpy
     tr_steps = 1; tr_dist = 12;  tr_pos = 0; // FIXME make these defaults
   }
 
+  // turn Arpy on or off
   void on() { enabled = true; }
   void off() {
       enabled = false;
       if( noteOffHandler) { noteOffHandler( note_played ); }
   }
+  // let you know what Arpy thinks about doing its job
+  bool isOn() { return enabled; }
 
   // pick which arpeggio to play
   void setArpId(uint8_t arp_id) { arp_id = arp_id % arp_count; }
@@ -33,6 +36,10 @@ class Arpy
   // set the root note of the arpeggio
   void setRootNote( uint8_t note ) { root_note = note; }
   uint8_t getRootNote() { return root_note; }
+
+  // set the octave offset for root_note (root_note += (octave_offset*12)
+  void setOctaveOffset( uint8_t offset ) { octave_offset = offset; }
+  uint8_t getOctaveOffset() { return octave_offset; }
 
   // set BPM of arpeggio
   void setBPM( float bpm ) {
@@ -83,6 +90,7 @@ class Arpy
         tr_pos = (tr_pos + 1) % tr_steps;
       }
       note_played = root_note + arps[arp_id][arp_pos] + tr_amount;
+      note_played = constrain(note_played + (12 * octave_offset), 0,127);
       if( noteOnHandler) { noteOnHandler( note_played ); }
       arp_pos = (arp_pos+1) % arp_len;
     }
@@ -104,6 +112,7 @@ class Arpy
     int8_t  tr_dist;       // like an octave
     uint8_t tr_pos;        // which tranposed we're on (0..tr_steps)
     uint8_t root_note;     //
+    uint8_t octave_offset; // offset for root_note
     uint16_t per_beat_millis; // = 1000 * 60 / bpm;
 
     uint8_t note_played;    // the note we have played, so we can unplay it later
