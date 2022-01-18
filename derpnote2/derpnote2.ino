@@ -1,5 +1,5 @@
 /**
- *  derpnote.ino -- sorta like a THX "Deep Note" sound
+ *  derpnote2.ino -- a closer approximation of THX "Deep Note" sound than "derpnote.ino"
  *
  *  @todbot 16 Dec 2021
  **/
@@ -17,14 +17,15 @@
 // SETTINGS
 #define NUM_VOICES 16
 
-// F#7  D7  A6  D6  A5  D5  A4  D4  A3  D3  D2
-// 102  98  93  86  81  74  69  62  57  50  38
-// F#3  D3  A4  D4  A3  D1  A2  D2  A1  D1  D2
-//  54  50  69  62  57  26  45  38  33  26  38
+// MIDI note names to note numbers
+// A2  D1  D2  D3  A3  D4  A4  D5  A5  D6  F#6
+// 45  26  38  50  57  62  69  74  81  86  90
+// from https://www.phpied.com/webaudio-deep-note-part-4-multiple-sounds/
 
-int note_start = 38;
-int notes_end[]  = {86, 93, 86, 93,  81, 74, 69, 57, 
-                     33, 26, 38, 54,  57, 26, 45, 38, };
+int note_start = 45; // A2
+int notes_end[]  = { 26, 38, 50, 57,  62, 69, 74, 81,  
+                     62, 69, 74, 81,  86, 86, 90, 90 };
+
 // oscillators
 Oscil<SAW_ANALOGUE512_NUM_CELLS, AUDIO_RATE> aOscs [NUM_VOICES];
 
@@ -51,7 +52,7 @@ void setup() {
   // while(!Serial); Serial.println("derpnote2 setup"); // for testing
   
   envelope.setADLevels(255, 255);
-  envelope.setTimes(300, 200, 20000, 1000);
+  envelope.setTimes(300, 200, 22000, 1000);
   for ( int i = 0; i < NUM_VOICES; i++) {
     aOscs[i].setTable(SAW_ANALOGUE512_DATA);
   }
@@ -66,12 +67,12 @@ void loop() {
 void handleDeepNoting() {
   
   if( millis() - state_time_last < state_duration ) {
-     return; // not time yet
+     return; // not time yet, bucko
   }
   
   state_time_last = millis();
 
-  if( state == STATE_START ) { 
+  if( state == STATE_START ) {               // first state is random chaos
     Serial.println("State: START");
     for ( int i = 0; i < NUM_VOICES; i++) {
       portamentos[i].start(Q8n0_to_Q16n16(note_start) + Q7n8_to_Q15n16(rand(1000)));
@@ -81,19 +82,20 @@ void handleDeepNoting() {
     state_duration = 3000;
     state = STATE_SLIDEA;
   }
-  else if( state == STATE_SLIDEA ) {
+  else if( state == STATE_SLIDEA ) {       // second state is moving random chaos
     Serial.println("State: SLIDEA");
     for ( int i = 0; i < NUM_VOICES; i++) {
-      portamentos[i].setTime(2000 + random(-500,1000));
+      portamentos[i].setTime(4000 + random(-500,1000));
       portamentos[i].start(Q8n0_to_Q16n16(note_start) + Q7n8_to_Q15n16(rand(3000)));
     }
     state_duration = 5000;
     state = STATE_SLIDEB;
   }
-  else if( state == STATE_SLIDEB ) { 
+  else if( state == STATE_SLIDEB ) {      // third state is we converge on big chord
     Serial.println("State: SLIDEB");
     for ( int i = 0; i < NUM_VOICES; i++) {
-      portamentos[i].setTime(6000u + (NUM_VOICES-i) * 200u); // notes earlier in chord_notes take longer
+      portamentos[i].setTime(6000 + (i * 200)); // notes later in notes array take longer
+//      portamentos[i].setTime(6000u + (NUM_VOICES-i) * 200u); // notes earlier in chord_notes take longer
       portamentos[i].start( Q8n0_to_Q16n16(notes_end[i]) + Q7n8_to_Q15n16(rand(100)));
     }
     state_duration = 8000;
