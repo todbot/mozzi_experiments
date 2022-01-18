@@ -127,8 +127,10 @@ void updateControl() {
 
   root_note = map( knobA, 0,1023, 24, 72);
   float bpm = map( knobB, 0,1023, 100, 5000 );
+
   arp.setRootNote( root_note );
   arp.setBPM( bpm );
+  arp.update();
 
   if( butA.fell() ) {
     arp.nextArpId();
@@ -142,14 +144,13 @@ void updateControl() {
   }
   
   if( butC.fell() ) {
-    patch_num = (patch_num+1) % 2;
+    patch_num = (patch_num+1) % 3;
     setPatch(patch_num);
-    Serial.printf("---- next patch: %d\n", patch_num);
+    Serial.printf("---- patch: %d\n", patch_num);
   }
 
   envelope.update();
   
-  arp.update();
 }
 
 void noteOn(uint8_t note) {
@@ -172,26 +173,31 @@ void noteOff(uint8_t note) {
 
 
 void readMIDI() {
-  if (MIDIusb.read()) {
-//    byte mtype = MIDIusb.getType();
-//    byte data1 = MIDIusb.getData1();
-//    byte data2 = MIDIusb.getData2();
-//    byte chan  = MIDIusb.getChannel();
-//    if( mtype == midi::NoteOn ) {  
-//      Serial.printf("MIDIusb: c:%d t:%2x data:%2x %2x\n", chan, mtype, data1,data2);
-//      // we're not using MIDI in yet
-//    }
-  }
+  if ( !MIDIusb.read() ) { return; }
+  byte mtype = MIDIusb.getType();
+  byte data1 = MIDIusb.getData1();
+  byte data2 = MIDIusb.getData2();
+  byte chan  = MIDIusb.getChannel();
+  Serial.printf("MIDIusb: c:%d t:%2x data:%2x %2x\n", chan, mtype, data1,data2);
+  if( !arp.isOn() ) { // only play notes if arp is not on
+    if( mtype == midi::NoteOn ) {
+        noteOn( data1 );
+    }
+    else if( mtype == midi::NoteOff ) {
+        noteOff( data1 );
+    }
+  } // arp.isOn()
 }
 
 void setPatch(uint8_t patchnum) {
   if( patchnum == 0 ) {
+    Serial.print("PATCH: saw waves");
     for( int i=0; i<NUM_VOICES; i++) { 
      aOscs[i].setTable(SAW_ANALOGUE512_DATA);
     }
     kFilterMod.setFreq(0.08f);
     envelope.setADLevels(255, 10);
-    envelope.setTimes(15, 200, 200, 200 );
+    envelope.setTimes(25, 200, 200, 200 );
     cutoff_freq = 80;
     resonance = 200;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
@@ -199,17 +205,22 @@ void setPatch(uint8_t patchnum) {
 //    svf.setResonance(resonance);
   }
   else if( patchnum == 1 ) { 
+    Serial.print("PATCH: soft square waves");
     for( int i=0; i<NUM_VOICES; i++) { 
      aOscs[i].setTable(SQUARE_ANALOGUE512_DATA);
     }
     kFilterMod.setFreq(0.08f);
-    envelope.setADLevels(255, 10);
+    envelope.setADLevels(240, 10);
     envelope.setTimes(350, 200, 200, 200);
     cutoff_freq = 127;
     resonance = 220;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
 //    svf.setCentreFreq(cutoff_freq * 16);
 //    svf.setResonance(resonance);
+  }
+  else if ( patchnum == 2 ) {
+    Serial.print("PATCH: arp on/off");
+    arp.setOn( !arp.isOn() );
   }
 }
 
