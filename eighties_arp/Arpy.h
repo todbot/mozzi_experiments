@@ -71,10 +71,13 @@ class Arpy
   // the distance in semitones between steps, often 12 for an octave
   void setTransposeDistance(uint8_t dist) {  tr_dist = dist; }
 
+  // call update as fast as possible, will trigger noteOn and noteOff functions
+  void update() { update(-1); } // -1 means "root note is updated immediately when changed"
+
   // call update as fast as possible, will trigger noteOn and noteOff function
-  void update() { update(0); }
-  
-  void update(uint8_t root_note_new)
+  // "root_note_new" is new root note to use at top of arp "measure"
+  // negative notes are invalid. "root_note_new == -1" is used as internal signaling
+  void update(int root_note_new)
   {
     if( !enabled ) { return; }
 
@@ -86,7 +89,7 @@ class Arpy
       
       // only make musical changes at start of a new measure // FIXME allow immediate
       if( arp_pos == 0 ) {
-        if( root_note_new ) { root_note = root_note_new; }
+        if( root_note_new >= 0 ) { root_note = root_note_new; }
         tr_pos = (tr_pos + 1) % tr_steps;
       }
       note_played = root_note + arps[arp_id][arp_pos] + tr_amount;
