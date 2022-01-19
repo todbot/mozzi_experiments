@@ -53,6 +53,10 @@ LowPassFilter lpf;
 Seqy seq = Seqy();
 
 float drum_pitch = 1.0;
+bool bd_on = true;
+bool sd_on = true;
+bool ch_on = false;
+bool oh_on = false;
 
 uint8_t cutoff_freq = 180;
 uint8_t resonance = 100; // range 0-255, 255 is most resonant
@@ -66,6 +70,7 @@ void setup() {
   //pinMode(pot1GndPin, OUTPUT);
   //digitalWrite(pot1GndPin, LOW);
 
+  seq.setBeatHandler( handleBeat );
   seq.setTriggerHandler( triggerDrums );
   seq.setBPM(120);
   
@@ -99,24 +104,23 @@ void setNotes() {
 
 void triggerDrums(bool bd, bool sd, bool ch, bool oh ) {
   Serial.printf("drum: %d %d %d %d\n", bd, sd, ch, oh);
-  if( bd ) { aBD.start(); }
-  if( sd ) { aSD.start(); }
-  if( ch ) { aCH.start(); }
-  if( oh ) { aOH.start(); }
+  if( bd && bd_on ) { aBD.start(); }
+  if( sd && sd_on ) { aSD.start(); }
+  if( ch && ch_on ) { aCH.start(); }
+  if( oh && oh_on ) { aOH.start(); }
 }
 
-uint32_t test_millis = 0;
+void handleBeat( uint8_t beatnum) {
+  if( beatnum == 0 || beatnum == 8) { 
+    seq.setSeqId( random(0, seq.getSeqCount()) );
+  }
+  Serial.printf("beat: %2d seq: %2d ", beatnum, seq.getSeqId() );
+}
 
 // mozzi function, called every CONTROL_RATE
 void updateControl() {
   
   seq.update();
-
-  if( millis() - test_millis > 1000 ) { 
-    test_millis = millis();
-    seq.setSeqId( random(0, seq.getSeqCount()) );
-    Serial.printf("sequence change: %d\n", seq.getSeqId() );
-  }
   
 //  envelope.update();
 

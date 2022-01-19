@@ -1,6 +1,6 @@
 /**
  * Seqy - a class to sequences
- * 12 Jan 2022 - Tod Kurt @todbot
+ * 18 Jan 2022 - Tod Kurt @todbot
  * See https://github.com/todbot/mozzi_experiments/ for examples
  */
 class Seqy
@@ -16,14 +16,17 @@ class Seqy
   uint8_t getSeqCount() { return seq_count; }
   
   // set the function to call when note on happens
-  void setTriggerHandler(void (*aTriggerHandler)(bool,bool,bool,bool)) {
+  void setTriggerHandler(void (*aTriggerHandler)(bool bd, bool sd,bool ch, bool oh)) {
     triggerHandler = aTriggerHandler;
+  }
+  // set the function to call when note on happens
+  void setBeatHandler(void (*aBeatHandler)(uint8_t beatnum)) {
+    beatHandler = aBeatHandler;
   }
   
   void setBPM( float bpm ) {
     bpm = bpm;
     per_beat_millis = 1000 * 60 / bpm / 4;
-    //note_duration = gate_percentage * per_beat_millis;
   }
   
   void update() {
@@ -31,6 +34,8 @@ class Seqy
     if( now - last_beat_millis < per_beat_millis ) { return; }
     
     last_beat_millis = now;
+
+    if( beatHandler ) { beatHandler( pos ); }
     
     uint16_t* seq = seqs[ seq_id ];
     uint16_t seq_bd = seq[0];
@@ -46,8 +51,7 @@ class Seqy
     bool ch_on = seq_ch & (1<<pos); // 0 if none, non-zero if trig
     bool oh_on = seq_oh & (1<<pos); // 0 if none, non-zero if trig
 
-    triggerHandler( bd_on, sd_on, ch_on, oh_on );
-    //Serial.printf("update: %04x %04x %d %d\n" ,seq0_bd, seq0_sd, bd_on, sd_on);
+    if( triggerHandler ) { triggerHandler(bd_on, sd_on, ch_on, oh_on ); }
   }
 
   private:
@@ -59,7 +63,8 @@ class Seqy
     uint16_t per_beat_millis; // = 1000 * 60 / bpm;
     uint32_t last_beat_millis;
     
-    void (*triggerHandler)(bool,bool,bool,bool) = nullptr;
+    void (*triggerHandler)(bool bd, bool sd, bool ch, bool oh) = nullptr;
+    void (*beatHandler)(uint8_t beat_num) = nullptr;
 
     static const int seq_len = 16;  // number of trigs in an seq
     static const int seq_inst_num = 4;
