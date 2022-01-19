@@ -19,11 +19,6 @@
 //#include <Adafruit_TinyUSB.h>
 #include <MozziGuts.h>
 #include <Sample.h> // Sample template
-#include <Oscil.h>
-#include <tables/saw_analogue512_int8.h> // oscillator waveform
-#include <tables/cos2048_int8.h> // filter modulation waveform
-#include <LowPassFilter.h>
-#include <ADSR.h>
 #include <mozzi_rand.h>  // for rand()
 #include <mozzi_midi.h>  // for mtof()
 
@@ -44,11 +39,6 @@ Sample <SD_NUM_CELLS, AUDIO_RATE> aSD(SD_DATA);
 Sample <CH_NUM_CELLS, AUDIO_RATE> aCH(CH_DATA);
 Sample <OH_NUM_CELLS, AUDIO_RATE> aOH(OH_DATA);
 
-#define NUM_VOICES 3
-
-Oscil<SAW_ANALOGUE512_NUM_CELLS, AUDIO_RATE> aOscs [NUM_VOICES];
-ADSR <CONTROL_RATE, AUDIO_RATE> envelope;
-LowPassFilter lpf;
 
 Seqy seq = Seqy();
 
@@ -57,9 +47,6 @@ bool bd_on = true;
 bool sd_on = true;
 bool ch_on = false;
 bool oh_on = false;
-
-uint8_t cutoff_freq = 180;
-uint8_t resonance = 100; // range 0-255, 255 is most resonant
 
 void setup() { 
   Serial.begin(115200);
@@ -74,12 +61,7 @@ void setup() {
   seq.setTriggerHandler( triggerDrums );
   seq.setBPM(120);
   
-  envelope.setADLevels(255, 10);
-  envelope.setTimes(20, 180, 180, 180 );
-  lpf.setCutoffFreqAndResonance(20, resonance);
-  //setNotes();
-  
-  set_sample_pitches();
+  setDrumPitches();
 
   startMozzi();
  
@@ -89,7 +71,7 @@ void loop() {
   audioHook();
 }
 
-void set_sample_pitches() {
+void setDrumPitches() {
   // set samples to play at the speed it was recorded, pitch-shifted potentially
   aBD.setFreq(((float) D_SAMPLERATE / (float) BD_NUM_CELLS) * drum_pitch);
   aSD.setFreq(((float) D_SAMPLERATE / (float) SD_NUM_CELLS) * drum_pitch);
@@ -122,20 +104,13 @@ void updateControl() {
   
   seq.update();
   
-//  envelope.update();
-
 }
 
 // mozzi function, called every AUDIO_RATE to output sample
 AudioOutput_t updateAudio() {
   long asig = 0;
-//  long asig = lpf.next(aOsc1.next() +
-//                       aOsc2.next()
-//                       );
-//  asig = (envelope.next() * asig) / 256 / 5;
 
   asig += aBD.next() + aSD.next() + aOH.next() + aCH.next();
   
   return MonoOutput::fromAlmostNBit(9,(long)asig);
-  //return MonoOutput::fromAlmostNBit(11, asig); // 16 = 8 signal bits + 8 envelope bits
-}
+f}

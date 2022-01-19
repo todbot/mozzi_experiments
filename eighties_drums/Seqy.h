@@ -11,19 +11,22 @@ class Seqy
   {
   }
 
-  void setSeqId(uint8_t id) { seq_id = id % seq_count; }
+  // which pattern to play  
+  void setSeqId(uint8_t id) { seq_id = id % seq_count; }a
   uint8_t getSeqId() { return seq_id; }
   uint8_t getSeqCount() { return seq_count; }
   
-  // set the function to call when note on happens
-  void setTriggerHandler(void (*aTriggerHandler)(bool bd, bool sd,bool ch, bool oh)) {
-    triggerHandler = aTriggerHandler;
-  }
-  // set the function to call when note on happens
+  // set the function to call at the top of a beat
   void setBeatHandler(void (*aBeatHandler)(uint8_t beatnum)) {
     beatHandler = aBeatHandler;
   }
   
+  // set the function to call to trigger drum samples
+  void setTriggerHandler(void (*aTriggerHandler)(bool bd, bool sd,bool ch, bool oh)) {
+    triggerHandler = aTriggerHandler;
+  }
+  
+  //   
   void setBPM( float bpm ) {
     bpm = bpm;
     per_beat_millis = 1000 * 60 / bpm / 4;
