@@ -27,14 +27,13 @@
 
 #include "d_kit.h"
 
-// pot is connected on pins 3v3, MO, MI.
-// MI is fake gnd. MO is wiper
 const int dacPin   =  0; // A0 // audio out assumed by Mozzi
 const int knobAPin =  1; // A1
-const int butBDPin =  7; 
-const int butSDPin =  8; 
-const int butCHPin =  9; 
-const int butOHPin = 10; 
+const int modePin  =  6; // "TX"
+const int butBDPin =  7; // "RX"
+const int butSDPin =  8; // "SCK"
+const int butCHPin =  9; // "MI"
+const int butOHPin = 10; // "MO"
 
 // use: Sample <table_size, update_rate> SampleName (wavetable)
 Sample <BD_NUM_CELLS, AUDIO_RATE> aBD(BD_DATA) ;
@@ -42,6 +41,7 @@ Sample <SD_NUM_CELLS, AUDIO_RATE> aSD(SD_DATA);
 Sample <CH_NUM_CELLS, AUDIO_RATE> aCH(CH_DATA);
 Sample <OH_NUM_CELLS, AUDIO_RATE> aOH(OH_DATA);
 
+Bounce butMode = Bounce();
 Bounce butBD = Bounce();
 Bounce butSD = Bounce();
 Bounce butCH = Bounce();
@@ -54,6 +54,8 @@ bool bd_on = true;
 bool sd_on = true;
 bool ch_on = true;
 bool oh_on = true;
+bool direct_play = false;
+int knobAval = 0;
 
 void setup() { 
   Serial.begin(115200);
@@ -61,6 +63,7 @@ void setup() {
   Serial.println("eighties_drums setup");
   
   pinMode(knobAPin, INPUT);
+  butMode.attach( modePin, INPUT_PULLUP);
   butBD.attach( butBDPin, INPUT_PULLUP);
   butSD.attach( butSDPin, INPUT_PULLUP);
   butCH.attach( butCHPin, INPUT_PULLUP);
@@ -91,6 +94,7 @@ void setDrumPitches() {
 // called by Seqy every beat, to trigger drum noises
 void triggerDrums(bool bd, bool sd, bool ch, bool oh ) {
   Serial.printf("drum: %d %d %d %d\n", bd, sd, ch, oh);
+  if( direct_play ) { return; } // no seq triggers when playing by hand  
   if( bd && bd_on ) { aBD.start(); }
   if( sd && sd_on ) { aSD.start(); }
   if( ch && ch_on ) { aCH.start(); }
@@ -102,22 +106,44 @@ void handleBeat( uint8_t beatnum) {
   if( beatnum == 0 || beatnum == 8) { 
     seq.setSeqId( random(0, seq.getSeqCount()) );
   }
-  Serial.printf("beat: %2d seq: %2d ", beatnum, seq.getSeqId() );
+  Serial.printf("play: %d beat: %2d seq: %2d ", direct_play, beatnum, seq.getSeqId() );
 }
+
 
 // mozzi function, called every CONTROL_RATE
 void updateControl() {
 
+  butMode.update();
   butBD.update();
   butSD.update();
   butCH.update();
   butOH.update();
 
-  // toggle mutes if button pressed
-  if( butBD.fell() ) { bd_on = !bd_on; }
-  if( butSD.fell() ) { sd_on = !sd_on; }
-  if( butCH.fell() ) { ch_on = !ch_on; }
-  if( butOH.fell() ) { oh_on = !oh_on; }
+  
+  knobAval = analogRead(knobAPin);
+  if( butMode.read() == LOW ) { // pressed
+    drum_pitch = (knobAval/1023.0)*2 + 0.25; // "map(knobAval, 0,1023, 0.5, 1.5 )"
+    setDrumPitches();
+  }
+  else {
+    float bpm = (knobAval/1023.0) * 100 + 50; // "float map(knobAval, 0,1023, 50,100)"
+    seq.setBPM(bpm);
+    direct_play = ( knobAval < 20 ); // let human play drums by themselves?
+  }
+  
+  if( direct_play ) { 
+    if( butBD.fell() ) { aBD.start(); }
+    if( butSD.fell() ) { aSD.start(); }
+    if( butCH.fell() ) { aCH.start(); }
+    if( butOH.fell() ) { aOH.start(); }  
+  }
+  else {
+    // toggle mutes when button pressed
+    if( butBD.fell() ) { bd_on = !bd_on; }
+    if( butSD.fell() ) { sd_on = !sd_on; }
+    if( butCH.fell() ) { ch_on = !ch_on; }
+    if( butOH.fell() ) { oh_on = !oh_on; }
+  }
 
   seq.update();
   
@@ -127,7 +153,8 @@ void updateControl() {
 AudioOutput_t updateAudio() {
   long asig = 0;
 
-  asig += aBD.next() + aSD.next() + aOH.next() + (aCH.next()/2);
+  // hihats are too loud, so lower their volume
+  asig += aBD.next() + aSD.next() + (aOH.next()/2) + (aCH.next()/2);
   
   return MonoOutput::fromAlmostNBit(9,(long)asig);
 }
