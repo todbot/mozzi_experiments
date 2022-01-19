@@ -21,6 +21,7 @@
 #include <Sample.h> // Sample template
 #include <mozzi_rand.h>  // for rand()
 #include <mozzi_midi.h>  // for mtof()
+#include <Bounce2.h>
 
 #include "Seqy.h"
 
@@ -29,9 +30,11 @@
 // pot is connected on pins 3v3, MO, MI.
 // MI is fake gnd. MO is wiper
 const int dacPin   =  0; // A0 // audio out assumed by Mozzi
-const int knobAPin = 10; // D10 = MO 
-const int knobBPin =  8; // D8 = SCK
-const int GndAPin  =  9; // D9 = MI
+const int knobAPin =  1; // A1
+const int butBDPin =  7; 
+const int butSDPin =  8; 
+const int butCHPin =  9; 
+const int butOHPin = 10; 
 
 // use: Sample <table_size, update_rate> SampleName (wavetable)
 Sample <BD_NUM_CELLS, AUDIO_RATE> aBD(BD_DATA) ;
@@ -39,24 +42,30 @@ Sample <SD_NUM_CELLS, AUDIO_RATE> aSD(SD_DATA);
 Sample <CH_NUM_CELLS, AUDIO_RATE> aCH(CH_DATA);
 Sample <OH_NUM_CELLS, AUDIO_RATE> aOH(OH_DATA);
 
+Bounce butBD = Bounce();
+Bounce butSD = Bounce();
+Bounce butCH = Bounce();
+Bounce butOH = Bounce();
 
 Seqy seq = Seqy();
 
 float drum_pitch = 1.0;
 bool bd_on = true;
 bool sd_on = true;
-bool ch_on = false;
-bool oh_on = false;
+bool ch_on = true;
+bool oh_on = true;
 
 void setup() { 
   Serial.begin(115200);
-  while(!Serial) delay(1);
+  //while(!Serial) delay(1);
   Serial.println("eighties_drums setup");
   
-  //pinMode(knobAPin, INPUT);
-  //pinMode(pot1GndPin, OUTPUT);
-  //digitalWrite(pot1GndPin, LOW);
-
+  pinMode(knobAPin, INPUT);
+  butBD.attach( butBDPin, INPUT_PULLUP);
+  butSD.attach( butSDPin, INPUT_PULLUP);
+  butCH.attach( butCHPin, INPUT_PULLUP);
+  butOH.attach( butOHPin, INPUT_PULLUP);
+  
   seq.setBeatHandler( handleBeat );
   seq.setTriggerHandler( triggerDrums );
   seq.setBPM(120);
@@ -79,11 +88,7 @@ void setDrumPitches() {
   aOH.setFreq(((float) D_SAMPLERATE / (float) OH_NUM_CELLS) * drum_pitch);
 }
 
-void setNotes() {
-//  float f = mtof(notes[note_id]);
-//  aOsc2.setFreq( f ); // + (float)rand(100)/100); // orig 1.001, 1.002, 1.004
-}
-
+// called by Seqy every beat, to trigger drum noises
 void triggerDrums(bool bd, bool sd, bool ch, bool oh ) {
   Serial.printf("drum: %d %d %d %d\n", bd, sd, ch, oh);
   if( bd && bd_on ) { aBD.start(); }
@@ -92,6 +97,7 @@ void triggerDrums(bool bd, bool sd, bool ch, bool oh ) {
   if( oh && oh_on ) { aOH.start(); }
 }
 
+// called by Seqy at top of every beat
 void handleBeat( uint8_t beatnum) {
   if( beatnum == 0 || beatnum == 8) { 
     seq.setSeqId( random(0, seq.getSeqCount()) );
@@ -101,7 +107,18 @@ void handleBeat( uint8_t beatnum) {
 
 // mozzi function, called every CONTROL_RATE
 void updateControl() {
-  
+
+  butBD.update();
+  butSD.update();
+  butCH.update();
+  butOH.update();
+
+  // toggle mutes if button pressed
+  if( butBD.fell() ) { bd_on = !bd_on; }
+  if( butSD.fell() ) { sd_on = !sd_on; }
+  if( butCH.fell() ) { ch_on = !ch_on; }
+  if( butOH.fell() ) { oh_on = !oh_on; }
+
   seq.update();
   
 }
@@ -110,7 +127,7 @@ void updateControl() {
 AudioOutput_t updateAudio() {
   long asig = 0;
 
-  asig += aBD.next() + aSD.next() + aOH.next() + aCH.next();
+  asig += aBD.next() + aSD.next() + aOH.next() + (aCH.next()/2);
   
   return MonoOutput::fromAlmostNBit(9,(long)asig);
-f}
+}

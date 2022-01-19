@@ -12,7 +12,7 @@ class Seqy
   }
 
   // which pattern to play  
-  void setSeqId(uint8_t id) { seq_id = id % seq_count; }a
+  void setSeqId(uint8_t id) { seq_id = id % seq_count; }
   uint8_t getSeqId() { return seq_id; }
   uint8_t getSeqCount() { return seq_count; }
   

@@ -140,7 +140,9 @@ CONSTTABLE_STORAGE(int8_t) BD_DATA [] = {0, 0, 0, 0, 0, 9, 6, 7, 4, 12, 12, 8,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 
-#define SD_NUM_CELLS 4108
+//#define SD_NUM_CELLS 4108
+// again we chop off the last sample because of click, weird! --Tod
+#define SD_NUM_CELLS 4107
  
 CONSTTABLE_STORAGE(int8_t) SD_DATA [] = {0, 0, 0, 0, 0, 0, 1, -1, 4, -39, -128,
 -117, -80, -106, -114, -104, -56, -64, -46, 16, 46, -48, -68, -6, 93, 95, 81,
