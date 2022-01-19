@@ -1,15 +1,22 @@
 /**
  * eighties_drums.ino --
  *  
- *  - Tested on QT Py M0 / Seeed XIAO (audio output pin A0) or Trinket M0 (pin 1)
+ *  - Tested on QT Py M0 / Seeed XIAO (audio output pin A0)
  *  
  *  Circuit:
- *  - Wire a 1k resistor from audio out to Tip & Ring1 of a standard 
- *      TRRS 1/8" (3.5mm) headphone plug
- *  - Plug into portable speaker with good bass response
- *  - Become engulfed with dismay in a Cameron-/Carpeter-inspired 1980s dystopia
+ *  - Audio out on A0 
+ *  - Pot on A1
+ *  - Buttons on D6, D7, D8, D9, D10
+ *  - Four buttons are track mutes (BD,SD,CH,OH)
  *  
  *  Code:
+ *  - Knob controls BPM or pitch (when "mode" button is pressed)
+ *  - Buttons are track mutes or direc playing the drum samples
+ *  - Sequencer "Seqy" has built-in drum patterns
+ *  - Main code will random change this pattern at top of every measure
+ *  - Drum samples from @diyelectromusic: 
+ *     https://github.com/diyelectromusic/sdemp/blob/master/src/SDEMP/ArduinoMozziSampleDrumMachine/ArduinoMozziSampleDrumMachine.ino
+ *     Thank you!
  *  
  * 18 Jan 2022 - @todbot
  *  
