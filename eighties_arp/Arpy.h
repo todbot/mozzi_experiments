@@ -7,7 +7,7 @@ class Arpy
 {
   public:
   
-  Arpy(): enabled(false), arp_id(0), arp_pos(0), note_played(0), root_note(0), octave_offset(0)
+  Arpy(): enabled(false), arp_id(0), arp_pos(0), root_note(0), octave_offset(0), note_played(0)
   {
     tr_steps = 1; tr_dist = 12;  tr_pos = 0; // FIXME make these defaults
   }
@@ -45,7 +45,7 @@ class Arpy
   // set BPM of arpeggio
   void setBPM( float bpm ) {
     bpm = bpm;
-    per_beat_millis = 1000 * 60 / bpm;
+    per_beat_millis = 1000.0 * 60 / bpm;
     note_duration = gate_percentage * per_beat_millis;
   }
 

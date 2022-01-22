@@ -13,7 +13,7 @@
  *  - For better quality, add a 500  1uF cap from 
  *  - Plug into portable speaker
  *  - Potentiometers on A1 & A2
- *  - Buttons on D7, D6
+ *  - Buttons on D7, D6, D8
  *  
  *  Compiling:
  *  - Bounce2 library - https://github.com/thomasfredericks/Bounce2/
@@ -24,14 +24,13 @@
  *  Code:
  *  - Knob on A1 controls root note
  *  - Knob on A2 controls bpm
- *  - Button on D7 ("RX") controls which arp to play
- *  - BUtotn on D6 ("TX") controls...
+ *  - Button on D7 ("RX") changes which arp to play
+ *  - Button on D6 ("TX") changes number of octaves in arp
+ *  - Button on D8 ("SCK") changes which sound to play
  *  
  * 12 Jan 2022 - @todbot
  * 
  */
-// Mozzi is very naughty about a few things
-//#pragma GCC diagnostic ignored "-Wno-expansion-to-defined"
 
 #define CONTROL_RATE 128 // mozzi rate for updateControl()
 
@@ -70,7 +69,6 @@ Oscil<SAW_ANALOGUE512_NUM_CELLS, AUDIO_RATE> aOscs [NUM_VOICES];
 Oscil<COS2048_NUM_CELLS, CONTROL_RATE> kFilterMod(COS2048_DATA);
 ADSR <CONTROL_RATE, AUDIO_RATE> envelope;
 LowPassFilter lpf;
-//StateVariable <BANDPASS> svf; // can be LOWPASS, BANDPASS, HIGHPASS or NOTCH
 
 uint8_t cutoff_freq = 180;
 uint8_t resonance = 100; // range 0-255, 255 is most resonant
@@ -201,8 +199,6 @@ void setPatch(uint8_t patchnum) {
     cutoff_freq = 80;
     resonance = 200;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
-//    svf.setCentreFreq(cutoff_freq * 16);
-//    svf.setResonance(resonance);
   }
   else if( patchnum == 1 ) { 
     Serial.print("PATCH: soft square waves");
@@ -215,8 +211,6 @@ void setPatch(uint8_t patchnum) {
     cutoff_freq = 127;
     resonance = 220;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
-//    svf.setCentreFreq(cutoff_freq * 16);
-//    svf.setResonance(resonance);
   }
   else if ( patchnum == 2 ) {
     Serial.print("PATCH: arp on/off");
@@ -232,6 +226,4 @@ AudioOutput_t updateAudio() {
   }
   asig = lpf.next(asig);
   return MonoOutput::fromNBit(18, envelope.next() * asig);
-//  asig = svf.next(asig);
-//  return MonoOutput::fromNBit(17, envelope.next() * asig);
 }
