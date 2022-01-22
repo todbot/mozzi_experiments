@@ -7,7 +7,7 @@ class Arpy
 {
   public:
   
-  Arpy(): enabled(false), arp_id(0), arp_pos(0), note_played(0), root_note(0), octave_offset(0)
+  Arpy(): enabled(false), arp_id(0), arp_pos(0), root_note(0), octave_offset(0), note_played(0)
   {
     tr_steps = 1; tr_dist = 12;  tr_pos = 0; // FIXME make these defaults
   }
