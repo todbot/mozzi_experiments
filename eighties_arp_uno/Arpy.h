@@ -10,7 +10,6 @@ class Arpy
   Arpy(): enabled(false), arp_id(0), arp_pos(0), note_played(0), root_note(0), octave_offset(0)
   {
     tr_steps = 1; tr_dist = 12;  tr_pos = 0; // FIXME make these defaults
-    note_played = 0;
   }
 
   // turn Arpy on or off
@@ -84,9 +83,6 @@ class Arpy
     if( !enabled ) { return; }
 
     uint32_t now = millis();
-//    Serial.print("arpy! "); Serial.print(now); 
-//    Serial.print(" "); Serial.print(last_beat_millis);
-//    Serial.print(" "); Serial.println(per_beat_millis);
 
     if( now - last_beat_millis > per_beat_millis )  {
       last_beat_millis = now;
