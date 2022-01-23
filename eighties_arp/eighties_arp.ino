@@ -32,10 +32,17 @@
  * 
  */
 
+#define DO_USB_MIDI 0  // set this to 1 to enable sending USB MIDI (and set TinyUSB USB Stack)
+
 #define CONTROL_RATE 128 // mozzi rate for updateControl()
 
+#if USE_TINYUSB
 #include <Adafruit_TinyUSB.h>
+#endif
+#if DO_USB_MIDI
 #include <MIDI.h>
+#endif
+
 #include <Bounce2.h>
 
 #include <MozziGuts.h>
@@ -60,9 +67,6 @@ const int butBPin  = 6;  // D6 "TX"
 const int butAPin  = 7;  // D7 "RX"
 const int butCPin  = 8;  // D8 "SCK"
 
-Adafruit_USBD_MIDI usb_midi;
-MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, MIDIusb); // USB MIDI
-
 #define NUM_VOICES 4
 
 Oscil<SAW_ANALOGUE512_NUM_CELLS, AUDIO_RATE> aOscs [NUM_VOICES];
@@ -84,11 +88,18 @@ Bounce butA = Bounce();
 Bounce butB = Bounce();
 Bounce butC = Bounce();
 
+#if DO_USB_MIDI
+Adafruit_USBD_MIDI usb_midi;
+MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, MIDIusb); // USB MIDI
+#endif 
+
 void setup() { 
+#if DO_USB_MIDI
   MIDIusb.begin(MIDI_CHANNEL_OMNI);
+  MIDIusb.turnThruOff();    // turn off echo
+#endif
   Serial.begin(115200);
 //  while(!Serial) delay(1);
-  MIDIusb.turnThruOff();    // turn off echo
 
   pinMode( LED_BUILTIN, OUTPUT);
   pinMode( knobAPin, INPUT);
@@ -130,21 +141,30 @@ void updateControl() {
   arp.setBPM( bpm );
   arp.update();
 
+  // arp change
   if( butA.fell() ) {
     arp.nextArpId();
     Serial.printf("--- picking next arp: %d\n", arp.getArpId());
   }
   
+  // octave change
   if( butB.fell() ) {
     arp_octaves = arp_octaves + 1; if( arp_octaves==4) { arp_octaves=1; }
     arp.setTransposeSteps( arp_octaves );
     Serial.printf("--- arp steps: %d\n",arp_octaves);
   }
   
+  // patch change
   if( butC.fell() ) {
-    patch_num = (patch_num+1) % 3;
+    patch_num = (patch_num+1) % 2;
     setPatch(patch_num);
     Serial.printf("---- patch: %d\n", patch_num);
+  }
+
+  // arp on / off: hold Button C for a second then release
+  if(butC.changed() && butC.read() == HIGH && butC.previousDuration() > 1000 ) {
+    Serial.println("---- arp on/off \n");
+    arp.setOn( !arp.isOn() );
   }
 
   envelope.update();
@@ -159,17 +179,20 @@ void noteOn(uint8_t note) {
     aOscs[i].setFreq( f * (float)(i*0.01 + 1)); // detune slightly
   }
   envelope.noteOn();
-  MIDIusb.sendNoteOn(note, 127, 1); // velocity 127 on chan 1
+  sendMIDI(note,127,1);  // velocity 127 chan 1
 }
 
 void noteOff(uint8_t note) {
   Serial.print("noteOFF:"); Serial.println((byte)note);
   digitalWrite(LED_BUILTIN, LOW);
   envelope.noteOff();
-  MIDIusb.sendNoteOn(note, 0, 1); // velocity 0 on chan 1
+  sendMIDI(note, 0, 1);
 }
 
-
+#if DO_USB_MIDI
+void sendMIDI(uint8_t note, uint8_t vel, uint8_t chan) {
+  MIDIusb.sendNoteOn(note, vel, chan);
+}
 void readMIDI() {
   if ( !MIDIusb.read() ) { return; }
   byte mtype = MIDIusb.getType();
@@ -186,6 +209,10 @@ void readMIDI() {
     }
   } // arp.isOn()
 }
+#else
+void sendMIDI(uint8_t note, uint8_t vel, uint8_t chan) { }
+void readMIDI() {}
+#endif
 
 void setPatch(uint8_t patchnum) {
   if( patchnum == 0 ) {
@@ -211,10 +238,6 @@ void setPatch(uint8_t patchnum) {
     cutoff_freq = 127;
     resonance = 220;
     lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
-  }
-  else if ( patchnum == 2 ) {
-    Serial.print("PATCH: arp on/off");
-    arp.setOn( !arp.isOn() );
   }
 }
 
