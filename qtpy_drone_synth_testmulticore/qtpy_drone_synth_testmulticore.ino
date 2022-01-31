@@ -56,7 +56,7 @@ void setup() {
   
   Serial.begin(115200);
 
-  while (!Serial) delay(10);   // wait until serial port is opened
+  //while (!Serial) delay(10);   // debug: wait until serial port is opened
 
   startMozzi();
   
