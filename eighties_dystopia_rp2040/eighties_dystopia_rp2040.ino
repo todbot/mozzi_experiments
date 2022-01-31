@@ -57,12 +57,15 @@ void setup() {
   // RP2040 defaults to GP0, from https://github.com/pschatzmann/Mozzi/
   // Mozzi.setPin(0,2); // this sets RP2040 GP2
   // Mozzi.setPin(0,16); // this sets RP2040 GP16  // MacroPad
-   Mozzi.setPin(0,16); // this sets RP2040 GP16  // Trinkey QT2040 GP16 
-  // pinMode(14,OUTPUT);
-  // digitalWrite(14, HIGH);
+  // Mozzi.setPin(0,16); // this sets RP2040 GP16  // Trinkey QT2040 GP16 
+  // Mozzi.setPin(0,19); // this sets RP2040 GP19  // KB2040 GP19 pin 14 
+   Mozzi.setPin(0,29);  // this sets RP2040 GP29  // QT Py A0 
+   // above doesn't work if Board set to QTPy RP2040
+//  Mozzi.setPin(0,5);  // this sets RP2040 GP29  // QT Py RX
+//  Mozzi.setPin(0,20);  // this sets RP2040 GP29  // QT Py TX
+   
   Serial.begin(115200);
-  delay(3000);
-  Serial.print("seed:"); Serial.println(random(100));
+  
   startMozzi();
   kFilterMod.setFreq(0.08f);
   lpf.setCutoffFreqAndResonance(20, resonance);
@@ -103,7 +106,12 @@ void updateControl() {
   if( millis() - lastMillis > note_duration )  {
     lastMillis = millis();
     note_id = rand(3); // (note_id+1) % 3;
-    Serial.println((byte)notes[note_id]);
+    Serial.print("note: "); Serial.println((byte)notes[note_id]);
+    if( Serial.available() ) { 
+      for(int i=1;i<NUM_VOICES-1;i++) {
+        aOscs[i].setFreq( 0 ); // orig 1.001, 1.002, 1.004
+      }
+    }
   }
 }
 
