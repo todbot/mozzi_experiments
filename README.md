@@ -1,6 +1,6 @@
 # mozzi_experiments
 
-Experiments with Mozzi, mostly on SAMD21 chips
+Experiments with Mozzi, mostly on SAMD21- and RP2040-based boards
 
 ## Sketches
 
