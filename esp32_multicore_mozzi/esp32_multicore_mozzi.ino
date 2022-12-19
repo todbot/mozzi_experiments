@@ -4,7 +4,7 @@
  * 16 Dec 2022 - @todbot / Tod Kurt
  * 
  * Hardware used in this test:
- * - QTPy ESP32 or other ESP32 (not ESP32-S2 or ESP32-S3 (single-core), maybe ESP32-C3)
+ * - QTPy ESP32 or other ESP32 (not ESP32-S2 or ESP32-C3 (single-core), maybe ESP32-S3)
  * - 1.3" SH1106 I2C OLED on pins QTPy SDA & SCL 
  * - PCM5102 I2S audio DAC on pins MOSI=DIN, MISO=PCM5102 LCK, SCK=PCM5102 BCK 
  * - Potentiometer (10k) on pin A3
