@@ -150,21 +150,17 @@ void TaskReadControls(void *pvParameters)  // This is a task.
     digit = map(newSensorValueA3, 100,4095, 0,9);
     if( newSensorValueA3 == 0 ) { digit = -1; }
     updateDTMF(digit);
-//    // simple filter because ESP32 ADC is noisy AF
-//    osc1freq = 0.9 * osc1freq + 0.1 * newSensorValueA3;
-//    osc2freq = 0.9 * osc1freq + 0.1 * newSensorValueA3;
     // a little debugging
     Serial.printf("AnalogRead: core %d knobval=%d digit=%d\n",xPortGetCoreID(), newSensorValueA3, digit);
     delay(20);
-    // vTaskDelay(100);  // one tick delay (15ms) in between reads for stability
   }
 }
 
 // a FreeRTOS task to update the display
 void TaskUpdateDisplay( void* pvParameters )
 { 
+  (void) pvParameters; // unused  
   for(;;) { 
-    (void) pvParameters; // unused  
     display.clearDisplay();
     display.setCursor(0, 0);
     display.setTextSize(2);
