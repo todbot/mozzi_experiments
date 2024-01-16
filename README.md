@@ -15,7 +15,9 @@ Experiments with Mozzi, mostly on SAMD21- and RP2040-based boards
 * "eighties_dystopia" - See [this Twitter thread](https://twitter.com/todbot/status/1475970495400923137) or
   [this blog post on Adafruit](https://blog.adafruit.com/2021/12/29/make-your-own-80s-dystopian-music-soundtrack-qtpy-arduino-todbot/)
   or this video below
-  <video width="320" controls src="https://user-images.githubusercontent.com/274093/147687238-b004583b-c28a-47b1-984b-539541b77f9c.mp4"></video>
+
+https://github.com/todbot/mozzi_experiments/assets/274093/b39463fb-55a2-458a-9ce9-b2939a42408d
+
 
 
 * "eighties_arp" - click for youtube video
