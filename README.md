@@ -13,6 +13,8 @@ Experiments with Mozzi, mostly on SAMD21- and RP2040-based boards
 
 * [eighties_drums](eighties_drums/eighties_drums.ino) - simple 4-channel drum machine w/ sequencer
 
+* [derpnote2](derpnote2/derpnote2.ino) - Tries to recreate THX "Deep Note" sound
+
 * and others in the repo
 
 
@@ -33,6 +35,8 @@ https://github.com/todbot/mozzi_experiments/assets/274093/b39463fb-55a2-458a-9ce
   <a href="eighties_arp/eighties_arp_wiring.jpg"><img src="eighties_arp/eighties_arp_wiring.jpg" alt="wiring" width="700"/></a>
 
 * "eighties_drums" - [demo on youtube](https://www.youtube.com/watch?v=Jtr5wm48R7A)
+
+* "derpnote2" - [demo video on twitter](https://twitter.com/todbot/status/1483512885779173377)
 
 
 ## How to install Mozzi
