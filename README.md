@@ -13,7 +13,7 @@ Experiments with Mozzi, mostly on SAMD21- and RP2040-based boards
 ## Demos
 
 * "eighties_dystopia" - See [this Twitter thread](https://twitter.com/todbot/status/1475970495400923137) or
-  [this blog post on Adafruit](https://blog.adafruit.com/2021/12/29/make-your-own-80s-dystopian-music-soundtrack-qtpy-arduino-todbot/) 
+  [this blog post on Adafruit](https://blog.adafruit.com/2021/12/29/make-your-own-80s-dystopian-music-soundtrack-qtpy-arduino-todbot/)
   or this video below
   <video width="320" controls src="https://user-images.githubusercontent.com/274093/147687238-b004583b-c28a-47b1-984b-539541b77f9c.mp4"></video>
 
@@ -24,6 +24,7 @@ Experiments with Mozzi, mostly on SAMD21- and RP2040-based boards
 
   <a href="eighties_arp/eighties_arp_wiring.jpg"><img src="eighties_arp/eighties_arp_wiring.jpg" alt="wiring" width="700"/></a>
 
+* "eighties_drums" - https://www.youtube.com/watch?v=Jtr5wm48R7A
 
 
 ## How to install Mozzi
