@@ -20,13 +20,13 @@ https://github.com/todbot/mozzi_experiments/assets/274093/b39463fb-55a2-458a-9ce
 
 
 
-* "eighties_arp" - click for youtube video
+* "eighties_arp" - click for [youtube video](https://www.youtube.com/watch?v=Ql72YoCJ8-8)
 
   [![youtube link](eighties_arp/eighties_arp_youtube.jpg) ](https://www.youtube.com/watch?v=Ql72YoCJ8-8)
 
   <a href="eighties_arp/eighties_arp_wiring.jpg"><img src="eighties_arp/eighties_arp_wiring.jpg" alt="wiring" width="700"/></a>
 
-* "eighties_drums" - https://www.youtube.com/watch?v=Jtr5wm48R7A
+* "eighties_drums" - [demo on youtube](https://www.youtube.com/watch?v=Jtr5wm48R7A)
 
 
 ## How to install Mozzi
