@@ -4,11 +4,17 @@ Experiments with Mozzi, mostly on SAMD21- and RP2040-based boards
 
 ## Sketches
 
+
 * [eighties_dystopia](eighties_dystopia/eighties_dystopia.ino) - A swirling ominous wub that evolves over time
 
 * [eighties_dystopia_rp2040](eighties_dystopia_rp2040/eighties_dystopia_rp2040.ino) - Same thing, but on a Raspberry Pi Pico
 
 * [eighties_arp](eighties_arp/eighties_arp.ino) - An arpeggio explorer for non-musicians and test bed for my "Arpy" arpeggio library
+
+* [eighties_drums](eighties_drums/eighties_drums.ino) - simple 4-channel drum machine w/ sequencer
+
+* and others in the repo
+
 
 ## Demos
 
