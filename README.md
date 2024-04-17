@@ -58,4 +58,4 @@ in "File" -> "Examples" -> "Mozzi".  Many of the examples will work with Scout b
 
 ## Any questions?
 
-Open up an issue on this repo or contact me on [twitter/@todbot](https://twitter.com/todbot)!
+Open up an issue on this repo or contact me on [@todbot@mastodon.social](https://mastodon.social/@todbot/)!
