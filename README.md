@@ -20,23 +20,21 @@ Experiments with Mozzi, mostly on SAMD21- and RP2040-based boards
 
 ## Demos
 
+* "derpnote2" - [demo on youtube](https://www.youtube.com/watch?v=7fX8cBwbOmU)
+
+* "eighties_drums" - [demo on youtube](https://www.youtube.com/watch?v=Jtr5wm48R7A)
+
 * "eighties_dystopia" - See [this Twitter thread](https://twitter.com/todbot/status/1475970495400923137) or
   [this blog post on Adafruit](https://blog.adafruit.com/2021/12/29/make-your-own-80s-dystopian-music-soundtrack-qtpy-arduino-todbot/)
   or this video below
 
-https://github.com/todbot/mozzi_experiments/assets/274093/b39463fb-55a2-458a-9ce9-b2939a42408d
-
-
+   https://github.com/todbot/mozzi_experiments/assets/274093/b39463fb-55a2-458a-9ce9-b2939a42408d
 
 * "eighties_arp" - click for [youtube video](https://www.youtube.com/watch?v=Ql72YoCJ8-8)
 
   [![youtube link](eighties_arp/eighties_arp_youtube.jpg) ](https://www.youtube.com/watch?v=Ql72YoCJ8-8)
 
   <a href="eighties_arp/eighties_arp_wiring.jpg"><img src="eighties_arp/eighties_arp_wiring.jpg" alt="wiring" width="700"/></a>
-
-* "eighties_drums" - [demo on youtube](https://www.youtube.com/watch?v=Jtr5wm48R7A)
-
-* "derpnote2" - [demo video on twitter](https://twitter.com/todbot/status/1483512885779173377)
 
 
 ## How to install Mozzi
