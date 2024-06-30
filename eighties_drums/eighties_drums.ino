@@ -19,12 +19,17 @@
  *     Thank you!
  *  
  * 18 Jan 2022 - @todbot
+ * 30 Jun 2024 - @todbot - updated to use Mozzi 2
  *  
  */
 // #define CONTROL_RATE 128
 
 //#include <Adafruit_TinyUSB.h>
-#include <MozziGuts.h>
+
+#include "MozziConfigValues.h"  // for named option values
+#define MOZZI_ANALOG_READ MOZZI_ANALOG_READ_NONE
+#define MOZZI_CONTROL_RATE 128 // mozzi rate for updateControl()
+#include <Mozzi.h>
 #include <Sample.h> // Sample template
 #include <mozzi_rand.h>  // for rand()
 #include <mozzi_midi.h>  // for mtof()

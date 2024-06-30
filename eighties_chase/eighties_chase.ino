@@ -6,7 +6,7 @@
  *  - Now's your chance. Run!
  *  
  *  - Tested on QT Py M0 / Seeed XAIO (audio output pin A0) or Trinket M0 (pin 1)
- *  - Use pot hooked up to pin MI (pin 9) to control filter cutoff
+ *  - Use pot hooked up to pin A1 to control filter cutoff
  *  
  *  Circuit:
  *  - Wire a 1k resistor from audio out to Tip & Ring1 of a standard 
@@ -15,19 +15,26 @@
  *  - Become engulfed with dismay in a Cameron-/Carpeter-inspired 1980s dystopia
  *  
  *  Code:
- *  - Five detuned oscillators are randomly detuned very second or so
+ *  - Five detuned oscillators are randomly detuned every second or so
  *  - A low-pass filter is slowly modulated over the filters
  *  - Every "note_duration" milliseconds, a new note is played
  *  - After 8 notes, the next note in "notes" is chosen
  *  
  * 4 Jan 2022 - @todbot
- * 
+ * 30 Jun 2024 - @todbot - updated for Mozzi 2
+ *
  */
-#include <MozziGuts.h>
+
+
+#include "MozziConfigValues.h"  // for named option values
+#define MOZZI_ANALOG_READ MOZZI_ANALOG_READ_NONE
+#define MOZZI_CONTROL_RATE 128 // mozzi rate for updateControl()
+
+#include <Mozzi.h>
 #include <Oscil.h>
 #include <tables/saw_analogue512_int8.h> // oscillator waveform
 #include <tables/cos2048_int8.h> // filter modulation waveform
-#include <LowPassFilter.h>
+#include <ResonantFilter.h>
 #include <ADSR.h>
 #include <mozzi_rand.h>  // for rand()
 #include <mozzi_midi.h>  // for mtof()
@@ -42,23 +49,18 @@ Oscil<COS2048_NUM_CELLS, CONTROL_RATE> kFilterMod(COS2048_DATA);
 ADSR <CONTROL_RATE, AUDIO_RATE> envelope;
 LowPassFilter lpf;
 
-uint8_t resonance = 195; // range 0-255, 255 is most resonant
+uint8_t resonance = 185; // range 0-255, 255 is most resonant
 
 uint8_t notes[] = {43, 43, 44, 41, }; // possible notes to play MIDI G2, G2#, F2
 uint16_t note_duration = 231; // 120 bpm = 250 msec 1/8th note, 231 msec = 130 bpm
 uint8_t note_id = 0;
 uint32_t lastMillis = 0;
 
-// pot is connected on pins 3v3, MO, MI.
-// MI is fake gnd. MO is wiper
-const int pot1Pin = 10;  // D10 = MO 
-const int pot1GndPin = 9; // D9 = MI
+const int pot1Pin = A1; 
 
 void setup() { 
   Serial.begin(115200);
   pinMode(pot1Pin, INPUT);
-  pinMode(pot1GndPin, OUTPUT);
-  digitalWrite( pot1GndPin, LOW);
 
   startMozzi();
   kFilterMod.setFreq(0.08f);
@@ -77,7 +79,7 @@ void setNotes() {
   aOsc2.setFreq( f + (float)rand(100)/100); // orig 1.001, 1.002, 1.004
   aOsc3.setFreq( f + (float)rand(100)/100);
   aOsc4.setFreq( f + (float)rand(100)/100);
-  aOsc5.setFreq( (f/2) + (float)rand(100)/1000);  
+  aOsc5.setFreq( (f/2) + (float)rand(100)/1000);  // sub osc
 }
 
 uint8_t beat_tick = 0;
@@ -85,9 +87,11 @@ uint8_t beat_tick = 0;
 void updateControl() {
   // filter range (0-255) corresponds with 0-8191Hz
   // oscillator & mods run from -128 to 127
-//  byte cutoff_freq = 67 + kFilterMod.next()/2;
+  // byte cutoff_freq = 67 + kFilterMod.next()/2;
   byte cutoff_freq = analogRead(pot1Pin) / 8 ; // we only want 0-127 really
   lpf.setCutoffFreqAndResonance(cutoff_freq, resonance);
+  // envelope.setADLevels(255, 1 + cutoff_freq); // range 1-128
+  envelope.setDecayLevel(1+cutoff_freq);  // 
 
   envelope.update();
   
@@ -106,13 +110,12 @@ void updateControl() {
 }
 
 // mozzi function, called every AUDIO_RATE to output sample
-AudioOutput_t updateAudio() {
+AudioOutput updateAudio() {
   long asig = lpf.next(aOsc1.next() + 
                        aOsc2.next() + 
                        aOsc3.next() +
                        aOsc4.next() +
                        aOsc5.next()
                        );
-  return MonoOutput::fromAlmostNBit(18, envelope.next() * asig); // 16 = 8 signal bits + 8 envelope bits                       
-//  return MonoOutput::fromAlmostNBit(11,asig);
+  return MonoOutput::fromAlmostNBit(19, envelope.next() * asig); // 19 = 13 signal bits + 8 envelope bits 
 }

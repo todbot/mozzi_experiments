@@ -2,9 +2,16 @@
  *  derpnote2.ino -- a closer approximation of THX "Deep Note" sound than "derpnote.ino"
  *
  *  @todbot 16 Dec 2021
+ *  @todbot 30 Jun 2024 -- updated to use Mozzi 2
+ *
  **/
 
-#include <MozziGuts.h>
+
+#include "MozziConfigValues.h"  // for named option values
+#define MOZZI_ANALOG_READ MOZZI_ANALOG_READ_NONE
+#define MOZZI_CONTROL_RATE 128 // mozzi rate for updateControl()
+
+#include <Mozzi.h>
 #include <Oscil.h> // oscillator template
 #include <tables/saw_analogue512_int8.h> // oscillator waveform
 #include <tables/triangle_analogue512_int8.h>
@@ -122,7 +129,7 @@ void updateControl() {
 }
 
 // Mozzi function to update audio
-AudioOutput_t updateAudio() {
+AudioOutput updateAudio() {
   long asig = (long) 0;
   for ( int i = 0; i < NUM_VOICES; i++) {
     asig += aOscs[i].next();

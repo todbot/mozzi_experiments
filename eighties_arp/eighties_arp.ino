@@ -1,7 +1,7 @@
 /**
  * eighties_arp.ino -- playing with arpeggios, testing my Arpy class
  *  - arp arp arp
- *  - two pots, two buttons, no keys!
+ *  - two pots, three buttons, no keys!
  *  - no musical knowledge needed, just plug it, start twisting knobs
  *  - for demo see: https://www.youtube.com/watch?v=Ql72YoCJ8-8
  *  
@@ -18,23 +18,29 @@
  *  Compiling:
  *  - Bounce2 library - https://github.com/thomasfredericks/Bounce2/
  *  - Adafruit TinyUSB library - https://github.com/adafruit/Adafruit_TinyUSB_Arduino/
- *  - Mozzi library - https://github.com/sensorium/Mozzi
- *  - Only Mozzi must you hand-install, others from Library Manager
+ *  - Mozzi 2 library - https://github.com/sensorium/Mozzi
+ *  - All libraries can be installed from Library Manager
  *  
  *  Code:
  *  - Knob on A1 controls root note
  *  - Knob on A2 controls bpm
  *  - Button on D7 ("RX") changes which arp to play
  *  - Button on D6 ("TX") changes number of octaves in arp
- *  - Button on D8 ("SCK") changes which sound to play
+ *  - Button on D8 ("SCK") changes which sound to play; hold to turn arp off and USB MIDI mode on 
  *  
  * 12 Jan 2022 - @todbot
- * 
+ * 30 Jun 2024 - @todbot - updated to Mozzi 2.0
+ *
  */
 
-#define DO_USB_MIDI 0  // set this to 1 to enable sending USB MIDI (and set TinyUSB USB Stack)
 
-#define CONTROL_RATE 128 // mozzi rate for updateControl()
+#define DO_USB_MIDI 1  // set this to 1 to enable sending USB MIDI (and set TinyUSB USB Stack)
+
+
+#include "MozziConfigValues.h"  // for named option values
+#define MOZZI_ANALOG_READ MOZZI_ANALOG_READ_NONE
+#define MOZZI_CONTROL_RATE 128 // mozzi rate for updateControl()
+
 
 #if USE_TINYUSB
 #include <Adafruit_TinyUSB.h>
@@ -45,14 +51,14 @@
 
 #include <Bounce2.h>
 
-#include <MozziGuts.h>
+#include <Mozzi.h>
 #include <Oscil.h>
 #include <tables/saw_analogue512_int8.h> // oscillator waveform
 #include <tables/square_analogue512_int8.h> // oscillator waveform
 #include <tables/triangle_analogue512_int8.h> // oscillator waveform
 #include <tables/sin512_int8.h> // oscillator waveform
 #include <tables/cos2048_int8.h> // filter modulation waveform
-#include <LowPassFilter.h>
+#include <ResonantFilter.h>
 #include <StateVariable.h> // bandpass & highpass filter
 #include <ADSR.h>
 #include <mozzi_rand.h>  // for rand()
@@ -242,7 +248,7 @@ void setPatch(uint8_t patchnum) {
 }
 
 // mozzi function, called every AUDIO_RATE to output sample
-AudioOutput_t updateAudio() {
+AudioOutput updateAudio() {
   long asig = (long) 0;
   for( int i=0; i<NUM_VOICES; i++) {
     asig += aOscs[i].next();

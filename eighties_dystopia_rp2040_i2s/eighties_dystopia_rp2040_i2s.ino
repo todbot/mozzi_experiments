@@ -1,39 +1,37 @@
 /**
- * eighties_dystopia_rp2040.ino --
+ * eighties_dystopia_rp2040_i2s.ino --
  *  - A swirling ominous wub that evolves over time
- *  - Tested on Raspberry Pi Pico, PWM audio output on pin GP0
+ *  - Tested on Raspberry Pi Pico, I2S DAC audio output on pins 20, 21, 22
  *  - No user input, just wallow in the sound
  *  
  *  Circuit:
- *  - Copy the PWM cleanup RC filter from schematic figure 3.4.1 "PWM Audio" in
- *     https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
- *     also see: https://www.youtube.com/watch?v=rwPTpMuvSXg
- *  - Wire GP0 to input of this circuit, output to TRRS Tip & Ring1
+ *  - Wire up an I2S DAC to pins 20 (BCK), 21 (LCK), and 22 (DATA)
  *  - Become engulfed with dismay in a Cameron-/Carpeter-inspired 1980s dystopia
  *  
  *  Compiling:
  *  - Install Mozzi 2 from Arduino Library Manager
-ada *  
+ *  
  *  Code:
- *  - Knob on A0 controls lowpass filter cutoff frequency
- *  - Knob on A1 controls lowpass filter resonance
  *  - Five detuned oscillators are randomly detuned very second or so
  *  - Every 12.5 seconds, a new note is randomly chosen from the allowed note list
+ *  - if connected, Knob on A0 controls lowpass filter cutoff frequency
+ *  - if connected, Knob on A1 controls lowpass filter resonance
  *  
  * 28 Dec 2021 - @todbot
  * 30 Jun 2024 - @todbot - update to Mozzi 2
  * 
  */
- // Mozzi is very naughty about a few things
-//#pragma GCC diagnostic ignored "-Wno-expansion-to-defined"
 
 // set this if you have pots wired up to A0 and A1
 //#define USE_KNOBS
  
 #include "MozziConfigValues.h"  // for named option values
-#define MOZZI_OUTPUT_MODE MOZZI_OUTPUT_PWM
-#define MOZZI_ANALOG_READ MOZZI_ANALOG_READ_NONE
-#define MOZZI_AUDIO_PIN_1 0  // GPIO pin number
+#define MOZZI_AUDIO_MODE MOZZI_OUTPUT_I2S_DAC
+#define MOZZI_AUDIO_CHANNELS MOZZI_STEREO 
+#define MOZZI_AUDIO_BITS 16
+#define MOZZI_I2S_PIN_BCK 20
+#define MOZZI_I2S_PIN_WS (MOZZI_I2S_PIN_BCK+1) // CANNOT BE CHANGED, HAS TO BE NEXT TO pBCLK, i.e. default is 21
+#define MOZZI_I2S_PIN_DATA 22
 #define MOZZI_CONTROL_RATE 128 // mozzi rate for updateControl()
 
 #include <Mozzi.h>
@@ -121,5 +119,5 @@ AudioOutput updateAudio() {
     asig += aOscs[i].next();
   }
   asig = lpf.next(asig);
-  return MonoOutput::fromAlmostNBit(12, asig);
+  return StereoOutput::fromAlmostNBit(13, asig, asig);
 }

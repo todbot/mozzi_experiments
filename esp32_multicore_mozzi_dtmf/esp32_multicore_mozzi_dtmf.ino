@@ -85,7 +85,6 @@ void setup() {
     ,  NULL 
     ,  0);  // which core to run on, "loop()" runs on core1, so lets run on core0
 
-
   startMozzi(CONTROL_RATE); // start Mozzi with given control rate
   aOsc1.setFreq(osc1freq); // set initial frequency
   aOsc2.setFreq(osc2freq); // set initial frequency
@@ -106,7 +105,6 @@ void updateDTMF(int digit) {
     case 0: osc1freq = 1336; osc2freq = 941; break;
     case -1: osc1freq = 350; osc2freq = 440; break;
   }
- 
 }
 
 // loop task runs on core1 on ESP32
