@@ -33,7 +33,8 @@ ada *
 #include "MozziConfigValues.h"  // for named option values
 #define MOZZI_OUTPUT_MODE MOZZI_OUTPUT_PWM
 #define MOZZI_ANALOG_READ MOZZI_ANALOG_READ_NONE
-#define MOZZI_AUDIO_PIN_1 0  // GPIO pin number
+#define MOZZI_AUDIO_PIN_1 0  // GPIO pin number, can be any pin
+#define MOZZI_AUDIO_RATE 32768  // must be power of two
 #define MOZZI_CONTROL_RATE 128 // mozzi rate for updateControl()
 
 #include <Mozzi.h>

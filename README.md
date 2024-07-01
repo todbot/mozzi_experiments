@@ -79,6 +79,7 @@ to be explicit.
     #define MOZZI_OUTPUT_MODE MOZZI_OUTPUT_PWM
     #define MOZZI_ANALOG_READ MOZZI_ANALOG_READ_NONE
     #define MOZZI_AUDIO_PIN_1 0  // GPIO pin number, can be any pin
+    #define MOZZI_AUDIO_RATE 32768
     #define MOZZI_CONTROL_RATE 128 // mozzi rate for updateControl()
     #include "Mozzi.h"
     ```
@@ -90,6 +91,7 @@ to be explicit.
     #define MOZZI_AUDIO_MODE MOZZI_OUTPUT_I2S_DAC
     #define MOZZI_AUDIO_CHANNELS MOZZI_STEREO 
     #define MOZZI_AUDIO_BITS 16
+    #define MOZZI_AUDIO_RATE 32768
     #define MOZZI_I2S_PIN_BCK 20
     #define MOZZI_I2S_PIN_WS (MOZZI_I2S_PIN_BCK+1) // HAS TO BE NEXT TO pBCLK, i.e. default is 21
     #define MOZZI_I2S_PIN_DATA 22
