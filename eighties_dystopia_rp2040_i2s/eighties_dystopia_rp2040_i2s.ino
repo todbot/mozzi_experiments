@@ -22,8 +22,8 @@
  * 
  */
 
-// set this if you have pots wired up to A0 and A1
-//#define USE_KNOBS
+// set this to 1 if you have pots wired up to A0 and A1
+#define USE_KNOBS 0
  
 #include "MozziConfigValues.h"  // for named option values
 #define MOZZI_AUDIO_MODE MOZZI_OUTPUT_I2S_DAC
@@ -85,9 +85,9 @@ void setNotes() {
 void updateControl() {
   // filter range (0-255) corresponds with 0-8191Hz
   // oscillator & mods run from -128 to 127
-  #ifdef HAVE_KNOBS
-  byte cutoff_freq = analogRead(A0) / 16; 
-  resonance = analogRead(A1) / 16; 
+  #if USE_KNOBS
+  byte cutoff_freq = analogRead(A0) / 8; 
+  resonance = analogRead(A1) / 4; 
   #else
   byte cutoff_freq = 80 + kFilterMod.next()/2;
   #endif
